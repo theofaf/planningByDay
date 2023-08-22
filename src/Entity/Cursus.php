@@ -4,7 +4,6 @@ namespace App\Entity;
 
 use App\Repository\CursusRepository;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: CursusRepository::class)]
@@ -18,11 +17,13 @@ class Cursus
     #[ORM\Column(length: 30)]
     private ?string $libelle = null;
 
-    #[ORM\OneToMany(mappedBy: 'idCursus', targetEntity: Classe::class)]
-    private Collection $classes;
+    #[ORM\OneToMany(mappedBy: 'cursus', targetEntity: Classe::class)]
+    /** @var ArrayCollection $classes */
+    private $classes;
 
-    #[ORM\ManyToMany(targetEntity: ModuleFormation::class, mappedBy: 'idModuleFormation_Cursus')]
-    private Collection $moduleFormations;
+    #[ORM\ManyToMany(targetEntity: ModuleFormation::class, mappedBy: 'listeCursus')]
+    /** @var ArrayCollection $moduleFormations */
+    private $moduleFormations;
 
     public function __construct()
     {
@@ -40,65 +41,58 @@ class Cursus
         return $this->libelle;
     }
 
-    public function setLibelle(string $libelle): static
+    public function setLibelle(string $libelle): self
     {
         $this->libelle = $libelle;
 
         return $this;
     }
 
-    /**
-     * @return Collection<int, Classe>
-     */
-    public function getClasses(): Collection
+    public function getClasses(): ?ArrayCollection
     {
         return $this->classes;
     }
 
-    public function addClass(Classe $class): static
+    public function addClasse(Classe $classe): self
     {
-        if (!$this->classes->contains($class)) {
-            $this->classes->add($class);
-            $class->setIdCursus($this);
+        if (!$this->classes->contains($classe)) {
+            $this->classes->add($classe);
+            $classe->setCursus($this);
         }
 
         return $this;
     }
 
-    public function removeClass(Classe $class): static
+    public function removeClasse(Classe $classe): self
     {
-        if ($this->classes->removeElement($class)) {
-            // set the owning side to null (unless already changed)
-            if ($class->getIdCursus() === $this) {
-                $class->setIdCursus(null);
+        if ($this->classes->removeElement($classe)) {
+            if ($classe->getCursus() === $this) {
+                $classe->setCursus(null);
             }
         }
 
         return $this;
     }
 
-    /**
-     * @return Collection<int, ModuleFormation>
-     */
-    public function getModuleFormations(): Collection
+    public function getModuleFormations(): ?ArrayCollection
     {
         return $this->moduleFormations;
     }
 
-    public function addModuleFormation(ModuleFormation $moduleFormation): static
+    public function addModuleFormation(ModuleFormation $moduleFormation): self
     {
         if (!$this->moduleFormations->contains($moduleFormation)) {
             $this->moduleFormations->add($moduleFormation);
-            $moduleFormation->addIdModuleFormationCursu($this);
+            $moduleFormation->addCursus($this);
         }
 
         return $this;
     }
 
-    public function removeModuleFormation(ModuleFormation $moduleFormation): static
+    public function removeModuleFormation(ModuleFormation $moduleFormation): self
     {
         if ($this->moduleFormations->removeElement($moduleFormation)) {
-            $moduleFormation->removeIdModuleFormationCursu($this);
+            $moduleFormation->removeCursus($this);
         }
 
         return $this;

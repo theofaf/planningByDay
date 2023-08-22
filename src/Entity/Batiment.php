@@ -4,7 +4,6 @@ namespace App\Entity;
 
 use App\Repository\BatimentRepository;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: BatimentRepository::class)]
@@ -31,14 +30,15 @@ class Batiment
     private ?int $codePostal = null;
 
     #[ORM\Column(nullable: true)]
-    private ?int $numeroTel = null;
+    private ?string $numeroTel = null;
 
-    #[ORM\ManyToOne(inversedBy: 'batiments')]
+    #[ORM\ManyToOne(targetEntity: Etablissement::class, inversedBy: 'batiments')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Etablissement $idEtablissement = null;
+    private ?Etablissement $etablissement = null;
 
-    #[ORM\OneToMany(mappedBy: 'idBatiment', targetEntity: Salle::class)]
-    private Collection $salles;
+    #[ORM\OneToMany(mappedBy: 'batiment', targetEntity: Salle::class)]
+    /** @var ArrayCollection $salles */
+    private $salles;
 
     public function __construct()
     {
@@ -55,7 +55,7 @@ class Batiment
         return $this->libelle;
     }
 
-    public function setLibelle(string $libelle): static
+    public function setLibelle(string $libelle): self
     {
         $this->libelle = $libelle;
 
@@ -67,7 +67,7 @@ class Batiment
         return $this->numVoie;
     }
 
-    public function setNumVoie(int $numVoie): static
+    public function setNumVoie(int $numVoie): self
     {
         $this->numVoie = $numVoie;
 
@@ -79,7 +79,7 @@ class Batiment
         return $this->rue;
     }
 
-    public function setRue(string $rue): static
+    public function setRue(string $rue): self
     {
         $this->rue = $rue;
 
@@ -91,7 +91,7 @@ class Batiment
         return $this->ville;
     }
 
-    public function setVille(string $ville): static
+    public function setVille(string $ville): self
     {
         $this->ville = $ville;
 
@@ -103,61 +103,57 @@ class Batiment
         return $this->codePostal;
     }
 
-    public function setCodePostal(int $codePostal): static
+    public function setCodePostal(int $codePostal): self
     {
         $this->codePostal = $codePostal;
 
         return $this;
     }
 
-    public function getNumeroTel(): ?int
+    public function getNumeroTel(): ?string
     {
         return $this->numeroTel;
     }
 
-    public function setNumeroTel(?int $numeroTel): static
+    public function setNumeroTel(?string $numeroTel): self
     {
         $this->numeroTel = $numeroTel;
 
         return $this;
     }
 
-    public function getIdEtablissement(): ?Etablissement
+    public function getEtablissement(): ?Etablissement
     {
-        return $this->idEtablissement;
+        return $this->etablissement;
     }
 
-    public function setIdEtablissement(?Etablissement $idEtablissement): static
+    public function setEtablissement(?Etablissement $etablissement): self
     {
-        $this->idEtablissement = $idEtablissement;
+        $this->etablissement = $etablissement;
 
         return $this;
     }
 
-    /**
-     * @return Collection<int, Salle>
-     */
-    public function getSalles(): Collection
+    public function getSalles(): ?ArrayCollection
     {
         return $this->salles;
     }
 
-    public function addSalle(Salle $salle): static
+    public function addSalle(Salle $salle): self
     {
         if (!$this->salles->contains($salle)) {
             $this->salles->add($salle);
-            $salle->setIdBatiment($this);
+            $salle->setBatiment($this);
         }
 
         return $this;
     }
 
-    public function removeSalle(Salle $salle): static
+    public function removeSalle(Salle $salle): self
     {
         if ($this->salles->removeElement($salle)) {
-            // set the owning side to null (unless already changed)
-            if ($salle->getIdBatiment() === $this) {
-                $salle->setIdBatiment(null);
+            if ($salle->getBatiment() === $this) {
+                $salle->setBatiment(null);
             }
         }
 

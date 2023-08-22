@@ -29,7 +29,7 @@ class Abonnement
         return $this->libelle;
     }
 
-    public function setLibelle(string $libelle): static
+    public function setLibelle(string $libelle): self
     {
         $this->libelle = $libelle;
 
@@ -41,7 +41,7 @@ class Abonnement
         return $this->prix;
     }
 
-    public function setPrix(float $prix): static
+    public function setPrix(float $prix): self
     {
         $this->prix = $prix;
 

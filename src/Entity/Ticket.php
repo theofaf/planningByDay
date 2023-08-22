@@ -21,15 +21,15 @@ class Ticket
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Statut $idStatut = null;
+    private ?Statut $statut = null;
 
-    #[ORM\ManyToOne(inversedBy: 'tickets')]
+    #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'tickets')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Utilisateur $idUtilisateur = null;
+    private ?Utilisateur $utilisateur = null;
 
-    #[ORM\ManyToOne(inversedBy: 'tickets')]
+    #[ORM\ManyToOne(targetEntity: Etablissement::class, inversedBy: 'tickets')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Etablissement $idEtablissement = null;
+    private ?Etablissement $etablissement = null;
 
     public function getId(): ?int
     {
@@ -41,7 +41,7 @@ class Ticket
         return $this->sujet;
     }
 
-    public function setSujet(string $sujet): static
+    public function setSujet(string $sujet): self
     {
         $this->sujet = $sujet;
 
@@ -53,45 +53,45 @@ class Ticket
         return $this->message;
     }
 
-    public function setMessage(string $message): static
+    public function setMessage(string $message): self
     {
         $this->message = $message;
 
         return $this;
     }
 
-    public function getIdStatut(): ?Statut
+    public function getStatut(): ?Statut
     {
-        return $this->idStatut;
+        return $this->statut;
     }
 
-    public function setIdStatut(?Statut $idStatut): static
+    public function setStatut(?Statut $statut): self
     {
-        $this->idStatut = $idStatut;
+        $this->statut = $statut;
 
         return $this;
     }
 
-    public function getIdUtilisateur(): ?Utilisateur
+    public function getUtilisateur(): ?Utilisateur
     {
-        return $this->idUtilisateur;
+        return $this->utilisateur;
     }
 
-    public function setIdUtilisateur(?Utilisateur $idUtilisateur): static
+    public function setUtilisateur(?Utilisateur $utilisateur): self
     {
-        $this->idUtilisateur = $idUtilisateur;
+        $this->utilisateur = $utilisateur;
 
         return $this;
     }
 
-    public function getIdEtablissement(): ?Etablissement
+    public function getEtablissement(): ?Etablissement
     {
-        return $this->idEtablissement;
+        return $this->etablissement;
     }
 
-    public function setIdEtablissement(?Etablissement $idEtablissement): static
+    public function setEtablissement(?Etablissement $etablissement): self
     {
-        $this->idEtablissement = $idEtablissement;
+        $this->etablissement = $etablissement;
 
         return $this;
     }

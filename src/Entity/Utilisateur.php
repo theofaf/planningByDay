@@ -4,7 +4,6 @@ namespace App\Entity;
 
 use App\Repository\UtilisateurRepository;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -29,31 +28,34 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    #[ORM\OneToMany(mappedBy: 'idReceveur', targetEntity: Message::class)]
-    private Collection $idReceveur;
+    #[ORM\OneToMany(mappedBy: 'receveur', targetEntity: Message::class)]
+    private $messagesRecues;
 
-    #[ORM\OneToMany(mappedBy: 'idEmetteur', targetEntity: Message::class)]
-    private Collection $idEmetteur;
+    #[ORM\OneToMany(mappedBy: 'emetteur', targetEntity: Message::class)]
+    private $messagesEnvoyees;
 
-    #[ORM\OneToMany(mappedBy: 'idUtilisateur', targetEntity: Ticket::class)]
-    private Collection $tickets;
+    #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: Ticket::class)]
+    /** @var ArrayCollection $tickets */
+    private $tickets;
 
-    #[ORM\ManyToMany(targetEntity: ModuleFormation::class, mappedBy: 'idModuleFormation_Utilisateur')]
-    private Collection $moduleFormations;
+    #[ORM\ManyToMany(targetEntity: ModuleFormation::class, mappedBy: 'listeUtilisateurs')]
+    /** @var ArrayCollection $moduleFormations */
+    private $moduleFormations;
 
-    #[ORM\ManyToOne(inversedBy: 'utilisateurs')]
+    #[ORM\ManyToOne(targetEntity: Etablissement::class, inversedBy: 'utilisateurs')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Etablissement $idEtablissement = null;
+    private ?Etablissement $etablissement = null;
 
-    #[ORM\OneToMany(mappedBy: 'idUtilisateur', targetEntity: Session::class)]
-    private Collection $sessions;
+    #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: Session::class)]
+    /** @var ArrayCollection $sessions */
+    private $sessions;
 
     public function __construct()
     {
-        $this->idReceveur = new ArrayCollection();
-        $this->idEmetteur = new ArrayCollection();
-        $this->tickets = new ArrayCollection();
+        $this->messagesRecues = new ArrayCollection();
+        $this->messagesEnvoyees = new ArrayCollection();
         $this->moduleFormations = new ArrayCollection();
+        $this->tickets = new ArrayCollection();
         $this->sessions = new ArrayCollection();
     }
 
@@ -67,7 +69,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->email;
     }
 
-    public function setEmail(string $email): static
+    public function setEmail(string $email): self
     {
         $this->email = $email;
 
@@ -96,7 +98,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         return array_unique($roles);
     }
 
-    public function setRoles(array $roles): static
+    public function setRoles(array $roles): self
     {
         $this->roles = $roles;
 
@@ -111,7 +113,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->password;
     }
 
-    public function setPassword(string $password): static
+    public function setPassword(string $password): self
     {
         $this->password = $password;
 
@@ -127,159 +129,121 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         // $this->plainPassword = null;
     }
 
-    /**
-     * @return Collection<int, Message>
-     */
-    public function getIdReceveur(): Collection
+    public function getMessagesRecues(): ?ArrayCollection
     {
-        return $this->idReceveur;
+        return $this->messagesRecues;
     }
 
-    public function addIdReceveur(Message $idReceveur): static
+    public function addMessage(Message $message): self
     {
-        if (!$this->idReceveur->contains($idReceveur)) {
-            $this->idReceveur->add($idReceveur);
-            $idReceveur->setIdReceveur($this);
+        if (!$this->messagesEnvoyees->contains($message)) {
+            $this->messagesEnvoyees->add($message);
+            $message->setReceveur($message->getReceveur());
+            $message->setEmetteur($this);
         }
 
         return $this;
     }
 
-    public function removeIdReceveur(Message $idReceveur): static
+    public function removeMessage(Message $message): self
     {
-        if ($this->idReceveur->removeElement($idReceveur)) {
-            // set the owning side to null (unless already changed)
-            if ($idReceveur->getIdReceveur() === $this) {
-                $idReceveur->setIdReceveur(null);
+        if ($this->messagesEnvoyees->removeElement($message)) {
+            if ($message->getReceveur() === $this) {
+                $message->setReceveur(null);
+                $message->setEmetteur(null);
             }
         }
 
         return $this;
     }
 
-    /**
-     * @return Collection<int, Message>
-     */
-    public function getIdEmetteur(): Collection
+    public function getMessagesEnvoyees(): ?ArrayCollection
     {
-        return $this->idEmetteur;
+        return $this->messagesEnvoyees;
     }
 
-    public function addIdEmetteur(Message $idEmetteur): static
-    {
-        if (!$this->idEmetteur->contains($idEmetteur)) {
-            $this->idEmetteur->add($idEmetteur);
-            $idEmetteur->setIdEmetteur($this);
-        }
-
-        return $this;
-    }
-
-    public function removeIdEmetteur(Message $idEmetteur): static
-    {
-        if ($this->idEmetteur->removeElement($idEmetteur)) {
-            // set the owning side to null (unless already changed)
-            if ($idEmetteur->getIdEmetteur() === $this) {
-                $idEmetteur->setIdEmetteur(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Ticket>
-     */
-    public function getTickets(): Collection
+    public function getTickets(): ?ArrayCollection
     {
         return $this->tickets;
     }
 
-    public function addTicket(Ticket $ticket): static
+    public function addTicket(Ticket $ticket): self
     {
         if (!$this->tickets->contains($ticket)) {
             $this->tickets->add($ticket);
-            $ticket->setIdUtilisateur($this);
+            $ticket->setUtilisateur($this);
         }
 
         return $this;
     }
 
-    public function removeTicket(Ticket $ticket): static
+    public function removeTicket(Ticket $ticket): self
     {
         if ($this->tickets->removeElement($ticket)) {
-            // set the owning side to null (unless already changed)
-            if ($ticket->getIdUtilisateur() === $this) {
-                $ticket->setIdUtilisateur(null);
+            if ($ticket->getUtilisateur() === $this) {
+                $ticket->setUtilisateur(null);
             }
         }
 
         return $this;
     }
 
-    /**
-     * @return Collection<int, ModuleFormation>
-     */
-    public function getModuleFormations(): Collection
+    public function getModuleFormations(): ?ArrayCollection
     {
         return $this->moduleFormations;
     }
 
-    public function addModuleFormation(ModuleFormation $moduleFormation): static
+    public function addModuleFormation(ModuleFormation $moduleFormation): self
     {
         if (!$this->moduleFormations->contains($moduleFormation)) {
             $this->moduleFormations->add($moduleFormation);
-            $moduleFormation->addIdModuleFormationUtilisateur($this);
+            $moduleFormation->addUtilisateur($this);
         }
 
         return $this;
     }
 
-    public function removeModuleFormation(ModuleFormation $moduleFormation): static
+    public function removeModuleFormation(ModuleFormation $moduleFormation): self
     {
         if ($this->moduleFormations->removeElement($moduleFormation)) {
-            $moduleFormation->removeIdModuleFormationUtilisateur($this);
+            $moduleFormation->removeUtilisateur($this);
         }
 
         return $this;
     }
 
-    public function getIdEtablissement(): ?Etablissement
+    public function getEtablissement(): ?Etablissement
     {
-        return $this->idEtablissement;
+        return $this->etablissement;
     }
 
-    public function setIdEtablissement(?Etablissement $idEtablissement): static
+    public function setEtablissement(?Etablissement $etablissement): self
     {
-        $this->idEtablissement = $idEtablissement;
+        $this->etablissement = $etablissement;
 
         return $this;
     }
 
-    /**
-     * @return Collection<int, Session>
-     */
-    public function getSessions(): Collection
+    public function getSessions(): ?ArrayCollection
     {
         return $this->sessions;
     }
 
-    public function addSession(Session $session): static
+    public function addSession(Session $session): self
     {
         if (!$this->sessions->contains($session)) {
             $this->sessions->add($session);
-            $session->setIdUtilisateur($this);
+            $session->setUtilisateur($this);
         }
 
         return $this;
     }
 
-    public function removeSession(Session $session): static
+    public function removeSession(Session $session): self
     {
         if ($this->sessions->removeElement($session)) {
-            // set the owning side to null (unless already changed)
-            if ($session->getIdUtilisateur() === $this) {
-                $session->setIdUtilisateur(null);
+            if ($session->getUtilisateur() === $this) {
+                $session->setUtilisateur(null);
             }
         }
 

@@ -14,69 +14,69 @@ class Message
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $message = null;
+    private ?string $contenu = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Statut $idStatut = null;
+    private ?Statut $statut = null;
 
-    #[ORM\ManyToOne(inversedBy: 'idReceveur')]
+    #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'messagesRecues')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Utilisateur $idReceveur = null;
+    private ?Utilisateur $receveur = null;
 
-    #[ORM\ManyToOne(inversedBy: 'idEmetteur')]
+    #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'messagesEnvoyees')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Utilisateur $idEmetteur = null;
+    private ?Utilisateur $emetteur = null;
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getMessage(): ?string
+    public function getContenu(): ?string
     {
-        return $this->message;
+        return $this->contenu;
     }
 
-    public function setMessage(string $message): static
+    public function setContenu(string $contenu): self
     {
-        $this->message = $message;
+        $this->contenu = $contenu;
 
         return $this;
     }
 
-    public function getIdStatut(): ?Statut
+    public function getStatut(): ?Statut
     {
-        return $this->idStatut;
+        return $this->statut;
     }
 
-    public function setIdStatut(?Statut $idStatut): static
+    public function setStatut(?Statut $statut): self
     {
-        $this->idStatut = $idStatut;
+        $this->statut = $statut;
 
         return $this;
     }
 
-    public function getIdReceveur(): ?Utilisateur
+    public function getReceveur(): ?Utilisateur
     {
-        return $this->idReceveur;
+        return $this->receveur;
     }
 
-    public function setIdReceveur(?Utilisateur $idReceveur): static
+    public function setReceveur(?Utilisateur $receveur): self
     {
-        $this->idReceveur = $idReceveur;
+        $this->receveur = $receveur;
 
         return $this;
     }
 
-    public function getIdEmetteur(): ?Utilisateur
+    public function getEmetteur(): ?Utilisateur
     {
-        return $this->idEmetteur;
+        return $this->emetteur;
     }
 
-    public function setIdEmetteur(?Utilisateur $idEmetteur): static
+    public function setEmetteur(?Utilisateur $emetteur): self
     {
-        $this->idEmetteur = $idEmetteur;
+        $this->emetteur = $emetteur;
 
         return $this;
     }

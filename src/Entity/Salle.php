@@ -4,7 +4,6 @@ namespace App\Entity;
 
 use App\Repository\SalleRepository;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: SalleRepository::class)]
@@ -24,12 +23,13 @@ class Salle
     #[ORM\Column]
     private ?bool $equipementInfo = null;
 
-    #[ORM\ManyToOne(inversedBy: 'salles')]
+    #[ORM\ManyToOne(targetEntity: Batiment::class, inversedBy: 'salles')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Batiment $idBatiment = null;
+    private ?Batiment $batiment = null;
 
-    #[ORM\OneToMany(mappedBy: 'idSalle', targetEntity: Session::class)]
-    private Collection $sessions;
+    #[ORM\OneToMany(mappedBy: 'salle', targetEntity: Session::class)]
+    /** @var ArrayCollection $sessions */
+    private $sessions;
 
     public function __construct()
     {
@@ -46,7 +46,7 @@ class Salle
         return $this->libelle;
     }
 
-    public function setLibelle(string $libelle): static
+    public function setLibelle(string $libelle): self
     {
         $this->libelle = $libelle;
 
@@ -58,7 +58,7 @@ class Salle
         return $this->nbPlace;
     }
 
-    public function setNbPlace(int $nbPlace): static
+    public function setNbPlace(int $nbPlace): self
     {
         $this->nbPlace = $nbPlace;
 
@@ -70,49 +70,45 @@ class Salle
         return $this->equipementInfo;
     }
 
-    public function setEquipementInfo(bool $equipementInfo): static
+    public function setEquipementInfo(bool $equipementInfo): self
     {
         $this->equipementInfo = $equipementInfo;
 
         return $this;
     }
 
-    public function getIdBatiment(): ?Batiment
+    public function getBatiment(): ?Batiment
     {
-        return $this->idBatiment;
+        return $this->batiment;
     }
 
-    public function setIdBatiment(?Batiment $idBatiment): static
+    public function setBatiment(?Batiment $batiment): self
     {
-        $this->idBatiment = $idBatiment;
+        $this->batiment = $batiment;
 
         return $this;
     }
 
-    /**
-     * @return Collection<int, Session>
-     */
-    public function getSessions(): Collection
+    public function getSessions(): ?ArrayCollection
     {
         return $this->sessions;
     }
 
-    public function addSession(Session $session): static
+    public function addSession(Session $session): self
     {
         if (!$this->sessions->contains($session)) {
             $this->sessions->add($session);
-            $session->setIdSalle($this);
+            $session->setSalle($this);
         }
 
         return $this;
     }
 
-    public function removeSession(Session $session): static
+    public function removeSession(Session $session): self
     {
         if ($this->sessions->removeElement($session)) {
-            // set the owning side to null (unless already changed)
-            if ($session->getIdSalle() === $this) {
-                $session->setIdSalle(null);
+            if ($session->getSalle() === $this) {
+                $session->setSalle(null);
             }
         }
 

@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\SessionRepository;
+use DateTimeInterface;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -15,102 +16,101 @@ class Session
     private ?int $id = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
-    private ?\DateTimeInterface $dateDebut = null;
+    private ?DateTimeInterface $dateDebut = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
-    private ?\DateTimeInterface $dateFin = null;
+    private ?DateTimeInterface $dateFin = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    private ?ModuleFormation $idModuleFormation = null;
+    private ?ModuleFormation $moduleFormation = null;
 
-    #[ORM\ManyToOne(inversedBy: 'sessions')]
+    #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'sessions')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Utilisateur $idUtilisateur = null;
+    private ?Utilisateur $utilisateur = null;
 
-    #[ORM\ManyToOne(inversedBy: 'sessions')]
+    #[ORM\ManyToOne(targetEntity: Classe::class, inversedBy: 'sessions')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Classe $idClasse = null;
+    private ?Classe $classe = null;
 
-    #[ORM\ManyToOne(inversedBy: 'sessions')]
+    #[ORM\ManyToOne(targetEntity: Salle::class, inversedBy: 'sessions')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Salle $idSalle = null;
+    private ?Salle $salle = null;
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getDateDebut(): ?\DateTimeInterface
+    public function getDateDebut(): ?DateTimeInterface
     {
         return $this->dateDebut;
     }
 
-    public function setDateDebut(\DateTimeInterface $dateDebut): static
+    public function setDateDebut(DateTimeInterface $dateDebut): self
     {
         $this->dateDebut = $dateDebut;
 
         return $this;
     }
 
-    public function getDateFin(): ?\DateTimeInterface
+    public function getDateFin(): ?DateTimeInterface
     {
         return $this->dateFin;
     }
 
-    public function setDateFin(\DateTimeInterface $dateFin): static
+    public function setDateFin(DateTimeInterface $dateFin): self
     {
         $this->dateFin = $dateFin;
 
         return $this;
     }
 
-    public function getIdModuleFormation(): ?ModuleFormation
+    public function getModuleFormation(): ?ModuleFormation
     {
-        return $this->idModuleFormation;
+        return $this->moduleFormation;
     }
 
-    public function setIdModuleFormation(?ModuleFormation $idModuleFormation): static
+    public function setModuleFormation(?ModuleFormation $moduleFormation): self
     {
-        $this->idModuleFormation = $idModuleFormation;
+        $this->moduleFormation = $moduleFormation;
 
         return $this;
     }
 
-    public function getIdUtilisateur(): ?Utilisateur
+    public function getUtilisateur(): ?Utilisateur
     {
-        return $this->idUtilisateur;
+        return $this->utilisateur;
     }
 
-    public function setIdUtilisateur(?Utilisateur $idUtilisateur): static
+    public function setUtilisateur(?Utilisateur $utilisateur): self
     {
-        $this->idUtilisateur = $idUtilisateur;
+        $this->utilisateur = $utilisateur;
 
         return $this;
     }
 
-    public function getIdClasse(): ?Classe
+    public function getClasse(): ?Classe
     {
-        return $this->idClasse;
+        return $this->classe;
     }
 
-    public function setIdClasse(?Classe $idClasse): static
+    public function setClasse(?Classe $classe): self
     {
-        $this->idClasse = $idClasse;
+        $this->classe = $classe;
 
         return $this;
     }
 
-    public function getIdSalle(): ?Salle
+    public function getSalle(): ?Salle
     {
-        return $this->idSalle;
+        return $this->salle;
     }
 
-    public function setIdSalle(?Salle $idSalle): static
+    public function setSalle(?Salle $salle): self
     {
-        $this->idSalle = $idSalle;
+        $this->salle = $salle;
 
         return $this;
     }
-
 }

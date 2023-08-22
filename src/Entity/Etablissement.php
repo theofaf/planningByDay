@@ -3,8 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\EtablissementRepository;
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -20,7 +20,7 @@ class Etablissement
     private ?string $libelle = null;
 
     #[ORM\Column]
-    private ?int $numBoie = null;
+    private ?int $numVoie = null;
 
     #[ORM\Column(length: 50)]
     private ?string $rue = null;
@@ -32,25 +32,28 @@ class Etablissement
     private ?int $codePostal = null;
 
     #[ORM\Column]
-    private ?int $numeroTel = null;
+    private ?string $numeroTel = null;
 
     #[ORM\Column]
     private ?bool $statutAbonnement = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
-    private ?\DateTimeInterface $dateAbonnement = null;
+    private ?DateTimeInterface $dateAbonnement = null;
 
     #[ORM\ManyToOne]
     private ?Abonnement $idAbonnement = null;
     
-    #[ORM\OneToMany(mappedBy: 'idEtablissement', targetEntity: Ticket::class)]
-    private Collection $tickets;
+    #[ORM\OneToMany(mappedBy: 'etablissement', targetEntity: Ticket::class)]
+    /** @var ArrayCollection $tickets */
+    private $tickets;
 
-    #[ORM\OneToMany(mappedBy: 'idEtablissement', targetEntity: Batiment::class)]
-    private Collection $batiments;
+    #[ORM\OneToMany(mappedBy: 'etablissement', targetEntity: Batiment::class)]
+    /** @var ArrayCollection $batiments */
+    private $batiments;
 
-    #[ORM\OneToMany(mappedBy: 'idEtablissement', targetEntity: Utilisateur::class)]
-    private Collection $utilisateurs;
+    #[ORM\OneToMany(mappedBy: 'etablissement', targetEntity: Utilisateur::class)]
+    /** @var ArrayCollection $utilisateurs */
+    private $utilisateurs;
 
     public function __construct()
     {
@@ -69,21 +72,21 @@ class Etablissement
         return $this->libelle;
     }
 
-    public function setLibelle(string $libelle): static
+    public function setLibelle(string $libelle): self
     {
         $this->libelle = $libelle;
 
         return $this;
     }
 
-    public function getNumBoie(): ?int
+    public function getNumVoie(): ?int
     {
-        return $this->numBoie;
+        return $this->numVoie;
     }
 
-    public function setNumBoie(int $numBoie): static
+    public function setNumVoie(int $numVoie): self
     {
-        $this->numBoie = $numBoie;
+        $this->numVoie = $numVoie;
 
         return $this;
     }
@@ -93,7 +96,7 @@ class Etablissement
         return $this->rue;
     }
 
-    public function setRue(string $rue): static
+    public function setRue(string $rue): self
     {
         $this->rue = $rue;
 
@@ -105,7 +108,7 @@ class Etablissement
         return $this->ville;
     }
 
-    public function setVille(string $ville): static
+    public function setVille(string $ville): self
     {
         $this->ville = $ville;
 
@@ -117,19 +120,19 @@ class Etablissement
         return $this->codePostal;
     }
 
-    public function setCodePostal(int $codePostal): static
+    public function setCodePostal(int $codePostal): self
     {
         $this->codePostal = $codePostal;
 
         return $this;
     }
 
-    public function getNumeroTel(): ?int
+    public function getNumeroTel(): ?string
     {
         return $this->numeroTel;
     }
 
-    public function setNumeroTel(int $numeroTel): static
+    public function setNumeroTel(string $numeroTel): self
     {
         $this->numeroTel = $numeroTel;
 
@@ -141,19 +144,19 @@ class Etablissement
         return $this->statutAbonnement;
     }
 
-    public function setStatutAbonnement(bool $statutAbonnement): static
+    public function setStatutAbonnement(bool $statutAbonnement): self
     {
         $this->statutAbonnement = $statutAbonnement;
 
         return $this;
     }
 
-    public function getDateAbonnement(): ?\DateTimeInterface
+    public function getDateAbonnement(): ?DateTimeInterface
     {
         return $this->dateAbonnement;
     }
 
-    public function setDateAbonnement(?\DateTimeInterface $dateAbonnement): static
+    public function setDateAbonnement(?DateTimeInterface $dateAbonnement): self
     {
         $this->dateAbonnement = $dateAbonnement;
 
@@ -165,100 +168,88 @@ class Etablissement
         return $this->idAbonnement;
     }
 
-    public function setIdAbonnement(?Abonnement $idAbonnement): static
+    public function setIdAbonnement(?Abonnement $idAbonnement): self
     {
         $this->idAbonnement = $idAbonnement;
 
         return $this;
     }
-    /**
-     * @return Collection<int, Ticket>
-     */
-    public function getTickets(): Collection
+
+    public function getTickets(): ?ArrayCollection
     {
         return $this->tickets;
     }
 
-    public function addTicket(Ticket $ticket): static
+    public function addTicket(Ticket $ticket): self
     {
         if (!$this->tickets->contains($ticket)) {
             $this->tickets->add($ticket);
-            $ticket->setIdEtablissement($this);
+            $ticket->setEtablissement($this);
         }
 
         return $this;
     }
 
-    public function removeTicket(Ticket $ticket): static
+    public function removeTicket(Ticket $ticket): self
     {
         if ($this->tickets->removeElement($ticket)) {
-            // set the owning side to null (unless already changed)
-            if ($ticket->getIdEtablissement() === $this) {
-                $ticket->setIdEtablissement(null);
+            if ($ticket->getEtablissement() === $this) {
+                $ticket->setEtablissement(null);
             }
         }
 
         return $this;
     }
 
-    /**
-     * @return Collection<int, Batiment>
-     */
-    public function getBatiments(): Collection
+    public function getBatiments(): ?ArrayCollection
     {
         return $this->batiments;
     }
 
-    public function addBatiment(Batiment $batiment): static
+    public function addBatiment(Batiment $batiment): self
     {
         if (!$this->batiments->contains($batiment)) {
             $this->batiments->add($batiment);
-            $batiment->setIdEtablissement($this);
+            $batiment->setEtablissement($this);
         }
 
         return $this;
     }
 
-    public function removeBatiment(Batiment $batiment): static
+    public function removeBatiment(Batiment $batiment): self
     {
         if ($this->batiments->removeElement($batiment)) {
-            // set the owning side to null (unless already changed)
-            if ($batiment->getIdEtablissement() === $this) {
-                $batiment->setIdEtablissement(null);
+            if ($batiment->getEtablissement() === $this) {
+                $batiment->setEtablissement(null);
             }
         }
 
         return $this;
     }
 
-    /**
-     * @return Collection<int, Utilisateur>
-     */
-    public function getUtilisateurs(): Collection
+    public function getUtilisateurs(): ?ArrayCollection
     {
         return $this->utilisateurs;
     }
 
-    public function addUtilisateur(Utilisateur $utilisateur): static
+    public function addUtilisateur(Utilisateur $utilisateur): self
     {
         if (!$this->utilisateurs->contains($utilisateur)) {
             $this->utilisateurs->add($utilisateur);
-            $utilisateur->setIdEtablissement($this);
+            $utilisateur->setEtablissement($this);
         }
 
         return $this;
     }
 
-    public function removeUtilisateur(Utilisateur $utilisateur): static
+    public function removeUtilisateur(Utilisateur $utilisateur): self
     {
         if ($this->utilisateurs->removeElement($utilisateur)) {
-            // set the owning side to null (unless already changed)
-            if ($utilisateur->getIdEtablissement() === $this) {
-                $utilisateur->setIdEtablissement(null);
+            if ($utilisateur->getEtablissement() === $this) {
+                $utilisateur->setEtablissement(null);
             }
         }
 
         return $this;
     }
-
 }

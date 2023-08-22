@@ -3,8 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\ModuleFormationRepository;
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -20,18 +20,20 @@ class ModuleFormation
     private ?string $libelle = null;
 
     #[ORM\Column(type: Types::TIME_MUTABLE)]
-    private ?\DateTimeInterface $duree = null;
+    private ?DateTimeInterface $duree = null;
 
     #[ORM\ManyToMany(targetEntity: Cursus::class, inversedBy: 'moduleFormations')]
-    private Collection $idModuleFormation_Cursus;
+    /** @var ArrayCollection $listeCursus */
+    private $listeCursus;
 
     #[ORM\ManyToMany(targetEntity: Utilisateur::class, inversedBy: 'moduleFormations')]
-    private Collection $idModuleFormation_Utilisateur;
+    /** @var ArrayCollection $listeCursus */
+    private $listeUtilisateurs;
 
     public function __construct()
     {
-        $this->idModuleFormation_Cursus = new ArrayCollection();
-        $this->idModuleFormation_Utilisateur = new ArrayCollection();
+        $this->listeCursus = new ArrayCollection();
+        $this->listeUtilisateurs = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -44,72 +46,64 @@ class ModuleFormation
         return $this->libelle;
     }
 
-    public function setLibelle(string $libelle): static
+    public function setLibelle(string $libelle): self
     {
         $this->libelle = $libelle;
 
         return $this;
     }
 
-    public function getDuree(): ?\DateTimeInterface
+    public function getDuree(): ?DateTimeInterface
     {
         return $this->duree;
     }
 
-    public function setDuree(\DateTimeInterface $duree): static
+    public function setDuree(DateTimeInterface $duree): self
     {
         $this->duree = $duree;
 
         return $this;
     }
 
-    /**
-     * @return Collection<int, Cursus>
-     */
-    public function getIdModuleFormationCursus(): Collection
+    public function getListeCursus(): ?ArrayCollection
     {
-        return $this->idModuleFormation_Cursus;
+        return $this->listeCursus;
     }
 
-    public function addIdModuleFormationCursu(Cursus $idModuleFormationCursu): static
+    public function addCursus(Cursus $cursus): self
     {
-        if (!$this->idModuleFormation_Cursus->contains($idModuleFormationCursu)) {
-            $this->idModuleFormation_Cursus->add($idModuleFormationCursu);
+        if (!$this->listeCursus->contains($cursus)) {
+            $this->listeCursus->add($cursus);
         }
 
         return $this;
     }
 
-    public function removeIdModuleFormationCursu(Cursus $idModuleFormationCursu): static
+    public function removeCursus(Cursus $cursus): self
     {
-        $this->idModuleFormation_Cursus->removeElement($idModuleFormationCursu);
+        $this->listeCursus->removeElement($cursus);
 
         return $this;
     }
 
-    /**
-     * @return Collection<int, Utilisateur>
-     */
-    public function getIdModuleFormationUtilisateur(): Collection
+    public function getListeUtilisateurs(): ?ArrayCollection
     {
-        return $this->idModuleFormation_Utilisateur;
+        return $this->listeUtilisateurs;
     }
 
-    public function addIdModuleFormationUtilisateur(Utilisateur $idModuleFormationUtilisateur): static
+    public function addUtilisateur(Utilisateur $utilisateur): self
     {
-        if (!$this->idModuleFormation_Utilisateur->contains($idModuleFormationUtilisateur)) {
-            $this->idModuleFormation_Utilisateur->add($idModuleFormationUtilisateur);
+        if (!$this->listeUtilisateurs->contains($utilisateur)) {
+            $this->listeUtilisateurs->add($utilisateur);
         }
 
         return $this;
     }
 
-    public function removeIdModuleFormationUtilisateur(Utilisateur $idModuleFormationUtilisateur): static
+    public function removeUtilisateur(Utilisateur $utilisateur): self
     {
-        $this->idModuleFormation_Utilisateur->removeElement($idModuleFormationUtilisateur);
+        $this->listeUtilisateurs->removeElement($utilisateur);
 
         return $this;
     }
-
-
 }
