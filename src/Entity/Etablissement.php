@@ -41,7 +41,7 @@ class Etablissement
     private ?DateTimeInterface $dateAbonnement = null;
 
     #[ORM\ManyToOne]
-    private ?Abonnement $idAbonnement = null;
+    private ?Abonnement $abonnement = null;
     
     #[ORM\OneToMany(mappedBy: 'etablissement', targetEntity: Ticket::class)]
     /** @var ArrayCollection $tickets */
@@ -163,14 +163,14 @@ class Etablissement
         return $this;
     }
 
-    public function getIdAbonnement(): ?Abonnement
+    public function getAbonnement(): ?Abonnement
     {
-        return $this->idAbonnement;
+        return $this->abonnement;
     }
 
-    public function setIdAbonnement(?Abonnement $idAbonnement): self
+    public function setAbonnement(?Abonnement $abonnement): self
     {
-        $this->idAbonnement = $idAbonnement;
+        $this->abonnement = $abonnement;
 
         return $this;
     }
