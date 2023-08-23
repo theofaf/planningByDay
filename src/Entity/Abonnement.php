@@ -8,6 +8,10 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: AbonnementRepository::class)]
 class Abonnement
 {
+    public const LICENCE_ESSENTIELLE_ID = 1;
+    public const LICENCE_AVANCEE_ID = 2;
+    public const LICENCE_PREMIUM_ID = 3;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]

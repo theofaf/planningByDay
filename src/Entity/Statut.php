@@ -8,6 +8,12 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: StatutRepository::class)]
 class Statut
 {
+    public const STATUT_BROUILLON = 'brouillon';
+    public const STATUT_PUBLIE = 'publie';
+    public const STATUT_FERME= 'ferme';
+    public const STATUT_ANNULE = 'annule';
+    public const STATUT_VALIDE = 'valide';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]

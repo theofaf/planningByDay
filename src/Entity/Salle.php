@@ -21,7 +21,7 @@ class Salle
     private ?int $nbPlace = null;
 
     #[ORM\Column]
-    private ?bool $equipementInfo = null;
+    private ?string $equipementInfo = null;
 
     #[ORM\ManyToOne(targetEntity: Batiment::class, inversedBy: 'salles')]
     #[ORM\JoinColumn(nullable: false)]
@@ -65,12 +65,12 @@ class Salle
         return $this;
     }
 
-    public function isEquipementInfo(): ?bool
+    public function getEquipementInfo(): ?string
     {
         return $this->equipementInfo;
     }
 
-    public function setEquipementInfo(bool $equipementInfo): self
+    public function setEquipementInfo(string $equipementInfo): self
     {
         $this->equipementInfo = $equipementInfo;
 
