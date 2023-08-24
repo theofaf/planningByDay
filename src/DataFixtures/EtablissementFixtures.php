@@ -16,6 +16,14 @@ class EtablissementFixtures extends Fixture implements DependentFixtureInterface
     public const REFERENCE_LYCEE_SARTHE = 'Lycée Jean-Paul Sartre';
     public const REFERENCE_UNIVERSITE_PROUST = 'Université Marcel Proust';
 
+    public const LISTE_REFERENCES_ETABLISSEMENT = [
+        self::REFERENCE_ECOLE_CAMUS,
+        self::REFERENCE_UNIVERSITE_ZOLA,
+        self::REFERENCE_ECOLE_HUGO,
+        self::REFERENCE_LYCEE_SARTHE,
+        self::REFERENCE_UNIVERSITE_PROUST,
+    ];
+
     public function load(ObjectManager $manager): void
     {
         $etablissementsData = [

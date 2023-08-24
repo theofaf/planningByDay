@@ -74,6 +74,21 @@ class ModuleFormation
     {
         if (!$this->listeCursus->contains($cursus)) {
             $this->listeCursus->add($cursus);
+            $cursus->addModuleFormation($this);
+        }
+
+        return $this;
+    }
+
+    public function setListeCursus(?array $listeCursus): self
+    {
+        $this->listeCursus = new ArrayCollection();
+        /** @var Cursus $cursus */
+        foreach ($listeCursus as $cursus) {
+            if (!$this->listeCursus->contains($cursus)) {
+                $this->listeCursus->add($cursus);
+                $cursus->addModuleFormation($this);
+            }
         }
 
         return $this;
