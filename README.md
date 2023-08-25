@@ -1,5 +1,17 @@
-# planningByDay
-Un projet ENI à la con, pour des cons, fait par les boss
+# lancer le projet
+- installer composer : https://getcomposer.org/download/
+- installer wamp/ xamp : https://www.wampserver.com/#wampserver-64-bits-php-5-6-25-php-7
+- reboot pc
+- ouvrer votre IDE favori,  nouveau projet puis git clone à cette url : https://github.com/theofaf/planningByDay.git
+- composer install
+- composer dump-autoload
+- php bin/console c:c //cache clear
+- php bin/console doctrine:database:create // crée la BDD
+- php bin/console d:s:v // valider la syncro entre entités/tables
+- php bin/console d:s:u // maj de la BDD
+- php bin/console d:m:m // lancer les migrations
+- php bin/console d:f:l (yes) // lancer les fixtures
+- php bin/console c:c //cache clear
 
 # contraintes pour créer la fixtures session :
 une session c'est un module, un prof, une salle et une classe.
