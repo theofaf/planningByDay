@@ -3,7 +3,9 @@
 namespace App\Entity;
 
 use App\Repository\UtilisateurRepository;
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -44,10 +46,6 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     /** @var ArrayCollection $tickets */
     private $tickets;
 
-    #[ORM\ManyToMany(targetEntity: ModuleFormation::class, mappedBy: 'listeUtilisateurs')]
-    /** @var ArrayCollection $moduleFormations */
-    private $moduleFormations;
-
     #[ORM\ManyToOne(targetEntity: Etablissement::class, inversedBy: 'utilisateurs')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Etablissement $etablissement = null;
@@ -56,13 +54,24 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     /** @var ArrayCollection $sessions */
     private $sessions;
 
+    /**
+     * Permet de savoir si on doit fait expirer le token d'authentification
+     * (si la dernière action date de plus de 10 min)
+     */
+    #[ORM\Column(type: Types::DATE_MUTABLE)]
+    private ?DateTimeInterface $dateDerniereAction = null;
+
+    #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: ModuleFormationUtilisateur::class)]
+    /** @var ArrayCollection $listeModulesFormations */
+    private $listeModulesFormations;
+
     public function __construct()
     {
         $this->messagesRecues = new ArrayCollection();
         $this->messagesEnvoyees = new ArrayCollection();
-        $this->moduleFormations = new ArrayCollection();
         $this->tickets = new ArrayCollection();
         $this->sessions = new ArrayCollection();
+        $this->listeModulesFormations = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -168,8 +177,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     {
         if (!$this->messagesEnvoyees->contains($message)) {
             $this->messagesEnvoyees->add($message);
-            $message->setReceveur($message->getReceveur());
-            $message->setEmetteur($this);
+            $message->getReceveur()->addMessage($message);
         }
 
         return $this;
@@ -218,30 +226,6 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getModuleFormations(): ?ArrayCollection
-    {
-        return $this->moduleFormations;
-    }
-
-    public function addModuleFormation(ModuleFormation $moduleFormation): self
-    {
-        if (!$this->moduleFormations->contains($moduleFormation)) {
-            $this->moduleFormations->add($moduleFormation);
-            $moduleFormation->addUtilisateur($this);
-        }
-
-        return $this;
-    }
-
-    public function removeModuleFormation(ModuleFormation $moduleFormation): self
-    {
-        if ($this->moduleFormations->removeElement($moduleFormation)) {
-            $moduleFormation->removeUtilisateur($this);
-        }
-
-        return $this;
-    }
-
     public function getEtablissement(): ?Etablissement
     {
         return $this->etablissement;
@@ -274,6 +258,44 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         if ($this->sessions->removeElement($session)) {
             if ($session->getUtilisateur() === $this) {
                 $session->setUtilisateur(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getDateDerniereAction(): ?DateTimeInterface
+    {
+        return $this->dateDerniereAction;
+    }
+
+    public function setDateDerniereAction(?DateTimeInterface $dateDerniereAction): self
+    {
+        $this->dateDerniereAction = $dateDerniereAction;
+
+        return $this;
+    }
+
+    public function getListeModulesFormations(): ?ArrayCollection
+    {
+        return $this->listeModulesFormations;
+    }
+
+    public function addListeModulesFormation(ModuleFormationUtilisateur $moduleFormationUtilisateur): self
+    {
+        if (!$this->listeModulesFormations->contains($moduleFormationUtilisateur)) {
+            $this->listeModulesFormations->add($moduleFormationUtilisateur);
+            $moduleFormationUtilisateur->setUtilisateur($this);
+        }
+
+        return $this;
+    }
+
+    public function removeListeModulesFormation(ModuleFormationUtilisateur $listeModulesFormation): self
+    {
+        if ($this->listeModulesFormations->removeElement($listeModulesFormation)) {
+            if ($listeModulesFormation->getUtilisateur() === $this) {
+                $listeModulesFormation->setUtilisateur(null);
             }
         }
 

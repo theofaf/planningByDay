@@ -10,7 +10,7 @@ class StatutFixtures extends Fixture
 {
     public function load(ObjectManager $manager): void
     {
-        $statuts = [
+        $statutsData = [
             Statut::STATUT_BROUILLON,
             Statut::STATUT_PUBLIE,
             Statut::STATUT_VALIDE,
@@ -18,8 +18,10 @@ class StatutFixtures extends Fixture
             Statut::STATUT_ANNULE,
         ];
 
-        foreach ($statuts as $statut) {
-            $manager->persist((new Statut())->setLibelle($statut));
+        foreach ($statutsData as $statutData) {
+            $statut = (new Statut())->setLibelle($statutData);
+            $manager->persist($statut);
+            $this->addReference($statutData, $statut);
         }
 
         $manager->flush();

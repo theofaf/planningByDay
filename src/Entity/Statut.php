@@ -14,6 +14,14 @@ class Statut
     public const STATUT_ANNULE = 'annule';
     public const STATUT_VALIDE = 'valide';
 
+    public const LISTE_STATUT_MESSAGE = [
+      self::STATUT_BROUILLON,
+      self::STATUT_PUBLIE,
+      self::STATUT_FERME,
+      self::STATUT_ANNULE,
+      self::STATUT_VALIDE,
+    ];
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]

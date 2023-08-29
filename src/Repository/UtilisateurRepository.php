@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Etablissement;
 use App\Entity\Utilisateur;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -37,5 +38,26 @@ class UtilisateurRepository extends ServiceEntityRepository implements PasswordU
         $user->setPassword($newHashedPassword);
         $this->getEntityManager()->persist($user);
         $this->getEntityManager()->flush();
+    }
+
+
+    /**
+     * @param Etablissement|int|null $etablissement Etablissement à partir duquel on souhaite récupérer des {@see Utilisateur}
+     * @return array|null Retourne l'ensemble des utilisateurs d'un même {@see Etablissement}, excepté {@see Utilisateur} passé en paramètre
+     */
+     public function recupererUtilisateursMemeEtablissement(
+        Etablissement|int|null $etablissement,
+    ) : ?array {
+        if ($etablissement instanceof Etablissement) {
+            $etablissement = $etablissement->getId();
+        }
+
+        $qb = $this->createQueryBuilder('u');
+        $qb
+            ->join('u.etablissement', 'e')
+            ->andWhere($qb->expr()->eq('e.id', $etablissement))
+        ;
+
+        return $qb->getQuery()->getResult();
     }
 }

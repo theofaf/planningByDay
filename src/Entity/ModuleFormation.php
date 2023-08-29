@@ -26,14 +26,14 @@ class ModuleFormation
     /** @var ArrayCollection $listeCursus */
     private $listeCursus;
 
-    #[ORM\ManyToMany(targetEntity: Utilisateur::class, inversedBy: 'moduleFormations')]
-    /** @var ArrayCollection $listeCursus */
-    private $listeUtilisateurs;
+    #[ORM\OneToMany(mappedBy: 'moduleFormation', targetEntity: ModuleFormationUtilisateur::class, cascade: ['persist'])]
+    /** @var ArrayCollection $moduleFormationUtilisateurs */
+    private $moduleFormationUtilisateurs;
 
     public function __construct()
     {
         $this->listeCursus = new ArrayCollection();
-        $this->listeUtilisateurs = new ArrayCollection();
+        $this->moduleFormationUtilisateurs = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -101,23 +101,28 @@ class ModuleFormation
         return $this;
     }
 
-    public function getListeUtilisateurs(): ?ArrayCollection
+    public function getModuleFormationUtilisateurs(): ?ArrayCollection
     {
-        return $this->listeUtilisateurs;
+        return $this->moduleFormationUtilisateurs;
     }
 
-    public function addUtilisateur(Utilisateur $utilisateur): self
+    public function addModuleFormationUtilisateur(ModuleFormationUtilisateur $moduleFormationUtilisateur): self
     {
-        if (!$this->listeUtilisateurs->contains($utilisateur)) {
-            $this->listeUtilisateurs->add($utilisateur);
+        if (!$this->moduleFormationUtilisateurs->contains($moduleFormationUtilisateur)) {
+            $this->moduleFormationUtilisateurs->add($moduleFormationUtilisateur);
+            $moduleFormationUtilisateur->setModuleFormation($this);
         }
 
         return $this;
     }
 
-    public function removeUtilisateur(Utilisateur $utilisateur): self
+    public function removeModuleFormationUtilisateur(ModuleFormationUtilisateur $moduleFormationUtilisateur): self
     {
-        $this->listeUtilisateurs->removeElement($utilisateur);
+        if ($this->moduleFormationUtilisateurs->removeElement($moduleFormationUtilisateur)) {
+            if ($moduleFormationUtilisateur->getModuleFormation() === $this) {
+                $moduleFormationUtilisateur->setModuleFormation(null);
+            }
+        }
 
         return $this;
     }
