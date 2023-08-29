@@ -7,6 +7,7 @@ use App\Entity\Message;
 use App\Entity\ModuleFormation;
 use App\Entity\ModuleFormationUtilisateur;
 use App\Entity\Statut;
+use App\Entity\Ticket;
 use App\Entity\Utilisateur;
 use App\Repository\UtilisateurRepository;
 use DateTime;
@@ -87,7 +88,7 @@ class UtilisateurFixtures extends Fixture implements DependentFixtureInterface
                 $message = (new Message())
                     ->setEmetteur($utilisateursMemeEtablissement[0])
                     ->setReceveur($utilisateursMemeEtablissement[1])
-                    ->setDateEnvoi($this->faker->dateTimeBetween())
+                    ->setDateEnvoi($this->faker->dateTimeBetween(startDate: '-1 year'))
                     ->setContenu($this->faker->realText(100))
                     ->setStatut($this->getReference(
                         $this->faker->randomElement(Statut::LISTE_STATUT_MESSAGE),
@@ -95,8 +96,22 @@ class UtilisateurFixtures extends Fixture implements DependentFixtureInterface
                     )
                 );
 
+                $ticket = (new Ticket())
+                    ->setUtilisateur($utilisateursMemeEtablissement[0])
+                    ->setEtablissement($etablissement)
+                    ->setStatut($this->getReference(
+                        $this->faker->randomElement(Statut::LISTE_STATUT_MESSAGE),
+                        Statut::class,
+                    ))
+                    ->setSujet($this->faker->words(5, true))
+                    ->setMessage($this->faker->realText(300))
+                    ->setDateEnvoi($this->faker->dateTimeBetween(startDate: '-1 year'))
+                ;
+
                 $utilisateursMemeEtablissement[0]->addMessage($message);
+                $utilisateursMemeEtablissement[0]->addTicket($ticket);
                 $manager->persist($message);
+                $manager->persist($ticket);
             }
         }
         $manager->flush();

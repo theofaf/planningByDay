@@ -25,5 +25,4 @@ il faut vérifier :
 - peut être d'autres truc mais t'as capté l'idée le sang
 
 # faire modif/ajout
-
-- faire fixtures pour session et tickets
+- faire fixtures pour session
