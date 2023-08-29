@@ -24,11 +24,6 @@ il faut vérifier :
 - que le module fait bien parti du cursus de la classe
 - peut être d'autres truc mais t'as capté l'idée le sang
 
-# contraintes pour créer la fixtures message :
-vérifier que émetteur/receveur font parti du même établissement
-
 # faire modif/ajout
-- ajouter une date dans message pour améliorer la trace
-- faire fixtures pour session, message et tickets
-- mettre date_derniere_action dans Utilisateur, pour savoir si le token doit expiré <br> (si pas d'activité depuis 10 min => expiration)
-- dans moduleFormationUtilisateur, ajouter date_dernier_cours et is_reabilité (default true), si + de 6 mois, le prof doit faire une réabilitation pour pourvoir enseigné le module
+
+- faire fixtures pour session et tickets

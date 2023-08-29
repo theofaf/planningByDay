@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\MessageRepository;
+use DateTimeInterface;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: MessageRepository::class)]
@@ -27,6 +29,9 @@ class Message
     #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'messagesEnvoyees')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Utilisateur $emetteur = null;
+
+    #[ORM\Column(type: Types::DATE_MUTABLE)]
+    private ?DateTimeInterface $dateEnvoi = null;
 
     public function getId(): ?int
     {
@@ -78,6 +83,17 @@ class Message
     {
         $this->emetteur = $emetteur;
 
+        return $this;
+    }
+
+    public function getDateEnvoi(): ?DateTimeInterface
+    {
+        return $this->dateEnvoi;
+    }
+
+    public function setDateEnvoi(?DateTimeInterface $dateEnvoi): self
+    {
+        $this->dateEnvoi = $dateEnvoi;
         return $this;
     }
 }
