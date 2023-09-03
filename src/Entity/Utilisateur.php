@@ -168,7 +168,8 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         // $this->plainPassword = null;
     }
 
-    public function getMessagesRecues(): ?ArrayCollection
+    /** @return ArrayCollection<Message> */
+    public function getMessagesRecues()
     {
         return $this->messagesRecues;
     }
@@ -195,12 +196,14 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getMessagesEnvoyees(): ?ArrayCollection
+    /** @return ArrayCollection<Message> */
+    public function getMessagesEnvoyees()
     {
         return $this->messagesEnvoyees;
     }
 
-    public function getTickets(): ?ArrayCollection
+    /** @return ArrayCollection<Ticket> */
+    public function getTickets()
     {
         return $this->tickets;
     }
@@ -238,7 +241,8 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getSessions(): ?ArrayCollection
+    /** @return ArrayCollection<Session> */
+    public function getSessions()
     {
         return $this->sessions;
     }
@@ -276,7 +280,8 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getListeModulesFormations(): ?ArrayCollection
+    /** @return ArrayCollection<ModuleFormationUtilisateur> */
+    public function getListeModulesFormations()
     {
         return $this->listeModulesFormations;
     }

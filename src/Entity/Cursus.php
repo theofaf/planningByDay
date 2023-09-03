@@ -48,7 +48,10 @@ class Cursus
         return $this;
     }
 
-    public function getClasses(): ?ArrayCollection
+    /**
+     * @return ArrayCollection<Classe>
+     */
+    public function getClasses()
     {
         return $this->classes;
     }
@@ -74,7 +77,10 @@ class Cursus
         return $this;
     }
 
-    public function getModuleFormations(): ?ArrayCollection
+    /**
+     * @return ArrayCollection<ModuleFormation>
+     */
+    public function getModuleFormations()
     {
         return $this->moduleFormations;
     }

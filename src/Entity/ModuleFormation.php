@@ -65,7 +65,8 @@ class ModuleFormation
         return $this;
     }
 
-    public function getListeCursus(): ?ArrayCollection
+    /** @return ArrayCollection<Cursus> */
+    public function getListeCursus()
     {
         return $this->listeCursus;
     }
@@ -101,7 +102,8 @@ class ModuleFormation
         return $this;
     }
 
-    public function getModuleFormationUtilisateurs(): ?ArrayCollection
+    /** @return ArrayCollection<ModuleFormationUtilisateur> */
+    public function getModuleFormationUtilisateurs()
     {
         return $this->moduleFormationUtilisateurs;
     }

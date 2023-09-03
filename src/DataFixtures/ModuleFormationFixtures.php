@@ -27,6 +27,14 @@ class ModuleFormationFixtures extends Fixture implements DependentFixtureInterfa
     public const REFERENCE_MODULE_FORMATION_TRADING = 'Trading';
     public const REFERENCE_MODULE_FORMATION_COMMUNICATION = 'Communication';
 
+    public const LISTE_FORMATIONS_MODULES = [
+        self::REFERENCE_MODULE_FORMATION_PROGRAMMATION,
+        self::REFERENCE_MODULE_FORMATION_MARKETING_RELATIONNEL,
+        self::REFERENCE_MODULE_FORMATION_ANGLAIS_AVANCE,
+        self::REFERENCE_MODULE_FORMATION_TRADING,
+        self::REFERENCE_MODULE_FORMATION_COMMUNICATION,
+    ];
+
     /**
      * @throws Exception
      */
@@ -46,6 +54,8 @@ class ModuleFormationFixtures extends Fixture implements DependentFixtureInterfa
                 'duree' => $this->genererAleaDureeModuleFormation(),
                 'listeCursus' => [
                     $this->getReference(CursusFixtures::REFERENCE_CURSUS_GESTION),
+                    $this->getReference(CursusFixtures::REFERENCE_CURSUS_MARKETING),
+                    $this->getReference(CursusFixtures::REFERENCE_CURSUS_MANAGEMENT),
                 ],
             ],
             [
@@ -53,6 +63,8 @@ class ModuleFormationFixtures extends Fixture implements DependentFixtureInterfa
                 'duree' => $this->genererAleaDureeModuleFormation(),
                 'listeCursus' => [
                     $this->getReference(CursusFixtures::REFERENCE_CURSUS_LANGUES),
+                    $this->getReference(CursusFixtures::REFERENCE_CURSUS_MARKETING),
+                    $this->getReference(CursusFixtures::REFERENCE_CURSUS_MANAGEMENT),
                 ],
             ],
             [
@@ -69,6 +81,8 @@ class ModuleFormationFixtures extends Fixture implements DependentFixtureInterfa
                 'listeCursus' => [
                     $this->getReference(CursusFixtures::REFERENCE_CURSUS_LANGUES),
                     $this->getReference(CursusFixtures::REFERENCE_CURSUS_INFORMATIQUE),
+                    $this->getReference(CursusFixtures::REFERENCE_CURSUS_MARKETING),
+                    $this->getReference(CursusFixtures::REFERENCE_CURSUS_MANAGEMENT),
                 ],
             ],
         ];

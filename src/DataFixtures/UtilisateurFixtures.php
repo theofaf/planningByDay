@@ -14,9 +14,9 @@ use DateTime;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Faker\Factory;
 use Faker\Generator;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UtilisateurFixtures extends Fixture implements DependentFixtureInterface
 {
@@ -31,13 +31,7 @@ class UtilisateurFixtures extends Fixture implements DependentFixtureInterface
 
     public function load(ObjectManager $manager): void
     {
-        $moduleReferences = [
-            ModuleFormationFixtures::REFERENCE_MODULE_FORMATION_PROGRAMMATION,
-            ModuleFormationFixtures::REFERENCE_MODULE_FORMATION_MARKETING_RELATIONNEL,
-            ModuleFormationFixtures::REFERENCE_MODULE_FORMATION_ANGLAIS_AVANCE,
-            ModuleFormationFixtures::REFERENCE_MODULE_FORMATION_TRADING,
-            ModuleFormationFixtures::REFERENCE_MODULE_FORMATION_COMMUNICATION,
-        ];
+        $moduleReferences = ModuleFormationFixtures::LISTE_FORMATIONS_MODULES;
 
         foreach (EtablissementFixtures::LISTE_REFERENCES_ETABLISSEMENT as $etablissementReference) {
             /** @var Etablissement $etablissement */
@@ -114,6 +108,7 @@ class UtilisateurFixtures extends Fixture implements DependentFixtureInterface
                 $manager->persist($ticket);
             }
         }
+
         $manager->flush();
     }
 

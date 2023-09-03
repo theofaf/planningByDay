@@ -134,7 +134,9 @@ class Batiment
         return $this;
     }
 
-    public function getSalles(): ?ArrayCollection
+
+    /** @return ArrayCollection<Salle> */
+    public function getSalles()
     {
         return $this->salles;
     }
