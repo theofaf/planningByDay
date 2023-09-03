@@ -36,18 +36,18 @@ echo -e "\n\e[94mSuppression de la base de données existante (si elle existe)..
 php bin/console doctrine:database:drop --if-exists --force
 echo ""
 # Créer la base de données
-echo -e "\n\e[94mCréation de la base de données avec les migrations...\e[0m"
+echo -e "\n\e[94mCréation de la base de données...\e[0m"
 php bin/console doctrine:database:create
-# Mettre à jour la base de données
-echo -e "\n\e[94mMise à jour de la base de données...\e[0m"
-php bin/console d:s:u --force
+# Exécution des migrations
+echo -e "\n\e[94mExécution des migrations...\e[0m"
+php bin/console doctrine:migrations:migrate --no-interaction
 # Valider la synchronisation entre les entités et les tables
-echo -e "\n\e[94mValidation de la synchronisation entre les entités et les tables...\e[0m"
+echo -e "\n\e[94mMaj et validation de la synchronisation entre les entités et les tables...\e[0m"
+php bin/console d:s:u
 php bin/console d:s:v
 # Charger les fixtures
 echo -e "\n\e[94mChargement des fixtures...\e[0m"
-
-php bin/console d:f:l --no-interaction
+php bin/console d:f:l --append
 # Vider à nouveau le cache Symfony
 echo -e "\n\e[94mVidage du cache Symfony...\e[0m"
 php bin/console c:c

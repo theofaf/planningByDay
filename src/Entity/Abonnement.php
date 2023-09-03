@@ -20,6 +20,9 @@ class Abonnement
     #[ORM\Column(length: 20)]
     private ?string $libelle = null;
 
+    #[ORM\Column(length: 20)]
+    private ?string $libelleTechnique = null;
+
     #[ORM\Column]
     private ?float $prix = null;
 
@@ -36,6 +39,18 @@ class Abonnement
     public function setLibelle(string $libelle): self
     {
         $this->libelle = $libelle;
+
+        return $this;
+    }
+
+    public function getLibelleTechnique(): ?string
+    {
+        return $this->libelleTechnique;
+    }
+
+    public function setLibelleTechnique(?string $libelleTechnique): self
+    {
+        $this->libelleTechnique = $libelleTechnique;
 
         return $this;
     }
