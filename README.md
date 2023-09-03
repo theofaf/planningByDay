@@ -1,4 +1,6 @@
-# DOCUMENTATION POUR INITIALISER LE PROJET
+###### DOCUMENTATION DU PROJET PLANNING_BY_DAY
+
+## Initialiser le projet (ou reset) sur un environnement Windows
 - **Installez** composer : https://getcomposer.org/download/
 - **Installez** wamp/ xamp **(PHP 8.1)**: https://www.wampserver.com/#wampserver-64-bits-php-5-6-25-php-7
 - **Installez** git : https://github.com/git-for-windows/git/releases/download/v2.42.0.windows.2/Git-2.42.0.2-64-bit.exe
@@ -25,4 +27,5 @@ il faut vérifier :
 
 # faire modif/ajout
 - il manque des info concernant les modules (distanciel, présentiel, campus en ligne)
-- déplacer les fixtures d'abonnement et statut dans des migrations (seules ses données seront de réelles données de prod)
+- commencer l'authentification
+- commencer les controllers rest

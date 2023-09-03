@@ -6,9 +6,9 @@ use App\Entity\Etablissement;
 use App\Entity\Message;
 use App\Entity\ModuleFormation;
 use App\Entity\ModuleFormationUtilisateur;
-use App\Entity\Statut;
 use App\Entity\Ticket;
 use App\Entity\Utilisateur;
+use App\Repository\StatutRepository;
 use App\Repository\UtilisateurRepository;
 use DateTime;
 use Doctrine\Bundle\FixturesBundle\Fixture;
@@ -25,6 +25,7 @@ class UtilisateurFixtures extends Fixture implements DependentFixtureInterface
     public function __construct(
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly UtilisateurRepository $utilisateurRepository,
+        private readonly StatutRepository $statutRepository,
     ) {
         $this->faker = Factory::create('fr_FR');
     }
@@ -32,6 +33,7 @@ class UtilisateurFixtures extends Fixture implements DependentFixtureInterface
     public function load(ObjectManager $manager): void
     {
         $moduleReferences = ModuleFormationFixtures::LISTE_FORMATIONS_MODULES;
+        $statuts = $this->statutRepository->findAll();
 
         foreach (EtablissementFixtures::LISTE_REFERENCES_ETABLISSEMENT as $etablissementReference) {
             /** @var Etablissement $etablissement */
@@ -84,19 +86,13 @@ class UtilisateurFixtures extends Fixture implements DependentFixtureInterface
                     ->setReceveur($utilisateursMemeEtablissement[1])
                     ->setDateEnvoi($this->faker->dateTimeBetween(startDate: '-1 year'))
                     ->setContenu($this->faker->realText(100))
-                    ->setStatut($this->getReference(
-                        $this->faker->randomElement(Statut::LISTE_STATUT_MESSAGE),
-                        Statut::class
-                    )
+                    ->setStatut($this->faker->randomElement($statuts)
                 );
 
                 $ticket = (new Ticket())
                     ->setUtilisateur($utilisateursMemeEtablissement[0])
                     ->setEtablissement($etablissement)
-                    ->setStatut($this->getReference(
-                        $this->faker->randomElement(Statut::LISTE_STATUT_MESSAGE),
-                        Statut::class,
-                    ))
+                    ->setStatut($this->faker->randomElement($statuts))
                     ->setSujet($this->faker->words(5, true))
                     ->setMessage($this->faker->realText(300))
                     ->setDateEnvoi($this->faker->dateTimeBetween(startDate: '-1 year'))
