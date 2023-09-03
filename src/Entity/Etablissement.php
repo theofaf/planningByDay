@@ -175,7 +175,8 @@ class Etablissement
         return $this;
     }
 
-    public function getTickets(): ?ArrayCollection
+    /** @return ArrayCollection<Ticket> */
+    public function getTickets()
     {
         return $this->tickets;
     }
@@ -201,7 +202,8 @@ class Etablissement
         return $this;
     }
 
-    public function getBatiments(): ?ArrayCollection
+    /** @return ArrayCollection<Batiment> */
+    public function getBatiments()
     {
         return $this->batiments;
     }
@@ -227,7 +229,8 @@ class Etablissement
         return $this;
     }
 
-    public function getUtilisateurs(): ?ArrayCollection
+    /** @return ArrayCollection<Utilisateur> */
+    public function getUtilisateurs()
     {
         return $this->utilisateurs;
     }

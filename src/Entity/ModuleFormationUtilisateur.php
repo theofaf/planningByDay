@@ -11,11 +11,11 @@ use Doctrine\ORM\Mapping as ORM;
 class ModuleFormationUtilisateur
 {
     #[ORM\Id]
-    #[ORM\ManyToOne(inversedBy: 'moduleFormationUtilisateurs')]
+    #[ORM\ManyToOne(targetEntity: ModuleFormation::class, inversedBy: 'moduleFormationUtilisateurs')]
     private ?ModuleFormation $moduleFormation = null;
 
     #[ORM\Id]
-    #[ORM\ManyToOne(inversedBy: 'listeModulesFormations')]
+    #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'listeModulesFormations')]
     private ?Utilisateur $utilisateur = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
