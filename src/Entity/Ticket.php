@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\TicketRepository;
+use DateTimeInterface;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: TicketRepository::class)]
@@ -30,6 +32,9 @@ class Ticket
     #[ORM\ManyToOne(targetEntity: Etablissement::class, inversedBy: 'tickets')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Etablissement $etablissement = null;
+
+    #[ORM\Column(type: Types::DATE_MUTABLE)]
+    private ?DateTimeInterface $dateEnvoi = null;
 
     public function getId(): ?int
     {
@@ -93,6 +98,17 @@ class Ticket
     {
         $this->etablissement = $etablissement;
 
+        return $this;
+    }
+
+    public function getDateEnvoi(): ?DateTimeInterface
+    {
+        return $this->dateEnvoi;
+    }
+
+    public function setDateEnvoi(?DateTimeInterface $dateEnvoi): self
+    {
+        $this->dateEnvoi = $dateEnvoi;
         return $this;
     }
 }

@@ -89,7 +89,8 @@ class Salle
         return $this;
     }
 
-    public function getSessions(): ?ArrayCollection
+    /** @return ArrayCollection<Session> */
+    public function getSessions()
     {
         return $this->sessions;
     }
