@@ -2,13 +2,13 @@
 
 namespace App\DataFixtures;
 
+use App\Repository\AbonnementRepository;
 use DateTime;
 use Doctrine\Bundle\FixturesBundle\Fixture;
-use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 use App\Entity\Etablissement;
 
-class EtablissementFixtures extends Fixture implements DependentFixtureInterface
+class EtablissementFixtures extends Fixture
 {
     public const REFERENCE_ECOLE_CAMUS = 'École Albert Camus';
     public const REFERENCE_UNIVERSITE_ZOLA = 'Université Émile Zola';
@@ -24,8 +24,14 @@ class EtablissementFixtures extends Fixture implements DependentFixtureInterface
         self::REFERENCE_UNIVERSITE_PROUST,
     ];
 
+    public function __construct(
+        private readonly AbonnementRepository $abonnementRepository,
+    ) {
+    }
+
     public function load(ObjectManager $manager): void
     {
+        $abonnements = $this->abonnementRepository->findAll();
         $etablissementsData = [
             [
                 'libelle' => self::REFERENCE_ECOLE_CAMUS,
@@ -35,7 +41,7 @@ class EtablissementFixtures extends Fixture implements DependentFixtureInterface
                 'codePostal' => 75000,
                 'numeroTel' => '0123456789',
                 'statutAbonnement' => true,
-                'abonnement' => $this->getReference(AbonnementFixtures::REFERENCE_ABONNEMENT_ESSENTIELLE_LIBELLE),
+                'abonnement' => $abonnements[0],
                 'dateAbonnement' => new DateTime(),
             ],
             [
@@ -46,7 +52,7 @@ class EtablissementFixtures extends Fixture implements DependentFixtureInterface
                 'codePostal' => 44200,
                 'numeroTel' => '0248986532',
                 'statutAbonnement' => true,
-                'abonnement' => $this->getReference(AbonnementFixtures::REFERENCE_ABONNEMENT_ESSENTIELLE_LIBELLE),
+                'abonnement' => $abonnements[0],
                 'dateAbonnement' => new DateTime('-2 years'),
             ],
             [
@@ -57,7 +63,7 @@ class EtablissementFixtures extends Fixture implements DependentFixtureInterface
                 'codePostal' => 31000,
                 'numeroTel' => '0598653298',
                 'statutAbonnement' => true,
-                'abonnement' => $this->getReference(AbonnementFixtures::REFERENCE_ABONNEMENT_AVANCEE_LIBELLE),
+                'abonnement' => $abonnements[1],
                 'dateAbonnement' => new DateTime('-1 year -6 months'),
             ],
             [
@@ -68,7 +74,7 @@ class EtablissementFixtures extends Fixture implements DependentFixtureInterface
                 'codePostal' => 35000,
                 'numeroTel' => '0226986554',
                 'statutAbonnement' => true,
-                'abonnement' => $this->getReference(AbonnementFixtures::REFERENCE_ABONNEMENT_AVANCEE_LIBELLE),
+                'abonnement' => $abonnements[1],
                 'dateAbonnement' => new DateTime('-1 year -3 months'),
 
             ],
@@ -80,7 +86,7 @@ class EtablissementFixtures extends Fixture implements DependentFixtureInterface
                 'codePostal' => 59000,
                 'numeroTel' => '0312548787',
                 'statutAbonnement' => true,
-                'abonnement' => $this->getReference(AbonnementFixtures::REFERENCE_ABONNEMENT_PREMIUM_LIBELLE),
+                'abonnement' => $abonnements[2],
                 'dateAbonnement' => new DateTime('-1 year -15 days'),
             ],
         ];
@@ -103,12 +109,5 @@ class EtablissementFixtures extends Fixture implements DependentFixtureInterface
         }
 
         $manager->flush();
-    }
-
-    public function getDependencies(): array
-    {
-        return [
-            AbonnementFixtures::class,
-        ];
     }
 }
