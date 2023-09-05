@@ -1,0 +1,41 @@
+nelmio_api_doc:
+    documentation:
+        info:
+            title: "Planning By Day"
+            description: |+
+                Bienvenue dans l'API de **Planning By Day**, une application web conçue spécialement pour les écoles, permettant la gestion efficace des plannings de sessions de cours dispensés par les formateurs.
+                
+                ## À propos de l'API
+                **Planning By Day** est une application web développée sous Symfony 6.3. Elle constitue un outil essentiel pour simplifier la gestion des ressources éducatives au sein des établissements scolaires. L'accès à cette API est exclusivement réservé aux développeurs de l'application '*Planning By Day*'. Son objectif principal est de fournir un ensemble complet de fonctionnalités visant à faciliter la gestion des plannings de cours, améliorant ainsi l'expérience éducative.
+              
+                Cette documentation a été générée automatiquement à partir des annotations incluses dans le code source de l'API. 
+                Elle représente une ressource précieuse pour comprendre et exploiter pleinement les fonctionnalités offertes par '*Planning By Day*'. Vous y trouverez des informations détaillées pour chaque URI auxquelles vous aurez accès.
+                
+                ## Détails des Endpoints
+                Chaque section relative à un endpoint vous fournira des informations essentielles :
+                
+                 #### **Action :**
+                 Vous découvrirez clairement quelle action est réalisée par cet endpoint, ce qui vous permettra de choisir la ressource appropriée pour votre tâche.
+                
+                 #### **Paramètres :**
+                 Vous comprendrez quels paramètres vous pouvez fournir à l'endpoint pour personnaliser son comportement en fonction de vos besoins.
+                
+                 #### **Réponses :**
+                 Vous saurez ce que l'endpoint peut retourner, vous aidant à anticiper les résultats de vos requêtes.
+                
+                 #### **Exceptions :**
+                 Nous vous fournirons une liste complète des exceptions qui peuvent être générées par l'endpoint, afin que vous puissiez gérer les erreurs de manière efficace.                
+                
+                ## **Sécurité**
+                L'accès à cette API est sécurisé et réservé exclusivement aux développeurs de l'application '*Planning By Day*'. Un système d'authentification robuste est en place pour garantir la confidentialité des données sensibles.
+                
+                ## **Contact**
+                Nous vous remercions de votre intérêt pour l'API '*Planning By Day*'. N'hésitez pas à explorer cette documentation pour découvrir l'ensemble des possibilités qui s'offrent à vous. Si vous avez des questions ou avez besoin d'assistance, n'hésitez pas à contacter notre équipe de support technique dédiée :
+                
+                - M. FAFET Théophane : [theophane.fafet2021@campus-eni.fr](mailto:theophane.fafet2021@campus-eni.fr)
+                - M BORDAGE Jordan : [jordan.bordage2019@campus-eni.fr](mailto:jordan.bordage2019@campus-eni.fr)
+            version: 1.0.0
+    areas:
+        default:
+            path_patterns:
+                - ^/api(?!/doc$)
