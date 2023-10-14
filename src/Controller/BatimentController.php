@@ -38,20 +38,28 @@ class BatimentController extends AbstractController
      */
     public function createBatiment(Request $request): JsonResponse
     {
-        // Récupérez les données de la requête JSON
         $data = json_decode($request->getContent(), true);
-
-        // Validez et créez le bâtiment
         $batiment = new Batiment();
-        $batiment->setNom($data['nom']); // Assurez-vous d'avoir les champs corrects ici
-        // Vous pouvez définir d'autres propriétés du bâtiment ici
+        $batiment->setLibelle($data['libelle']);
+        $batiment->setNumVoie($data['numVoie']);
+        $batiment->setRue($data['rue']);
+        $batiment->setVille($data['ville']);
+        $batiment->setCodePostal($data['codePostal']);
+        $batiment->setNumeroTel($data['numeroTel']);
+
+       
+        $etablissementId = $data['etablissementId'];
+        $etablissement = $entityManager->getRepository(Etablissement::class)->find($etablissementId);
+        $batiment->setEtablissement($etablissement);
 
         $entityManager = $this->getDoctrine()->getManager();
         $entityManager->persist($batiment);
         $entityManager->flush();
 
-        // Retournez une réponse JSON avec le nouveau bâtiment créé
-        return new JsonResponse(['message' => 'Bâtiment créé avec succès', 'batiment' => $batiment->toArray()], JsonResponse::HTTP_CREATED);
+        
+        $batimentData = $batiment->toArray();
+
+        return new JsonResponse(['message' => 'Bâtiment créé avec succès', 'batiment' => $batimentData], JsonResponse::HTTP_CREATED);
     }
     /**
      * @Route("/", methods={"GET"})
@@ -70,20 +78,16 @@ class BatimentController extends AbstractController
      */
     public function listBatiments(): JsonResponse
     {
-        // Récupla liste des bâtiments depuis la base de données
         $entityManager = $this->getDoctrine()->getManager();
         $batimentRepository = $entityManager->getRepository(Batiment::class);
         $batiments = $batimentRepository->findAll();
 
-        // Créer un tableau pour stocker les données des bâtiments
         $batimentsData = [];
 
-        // Convertir chaque bâtiment en un tableau de données
         foreach ($batiments as $batiment) {
             $batimentsData[] = $batiment->toArray(); // Assurez-vous d'avoir la méthode toArray() dans votre entité Batiment
         }
 
-        // Retournez une réponse JSON avec la liste des bâtiments
         return new JsonResponse($batimentsData, JsonResponse::HTTP_OK);
     }
     /**
@@ -118,20 +122,20 @@ class BatimentController extends AbstractController
      */
     public function getBatiment(int $id): JsonResponse
     {
-        // Recherche le bâtiment par ID dans la base de données
+
         $entityManager = $this->getDoctrine()->getManager();
         $batimentRepository = $entityManager->getRepository(Batiment::class);
         $batiment = $batimentRepository->find($id);
 
-        // Si le bâtiment n'est pas trouvé, retournez une réponse 404
+
         if (!$batiment) {
             return new JsonResponse(['message' => 'Bâtiment non trouvé'], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        // Convertir le bâtiment en un tableau de données si nécessaire
+
         $batimentData = $batiment->toArray(); 
 
-        // Retourne une réponse JSON avec les détails du bâtiment
+
         return new JsonResponse($batimentData, JsonResponse::HTTP_OK);
     }
     /**
@@ -247,7 +251,6 @@ class BatimentController extends AbstractController
             return new JsonResponse(['message' => 'Bâtiment non trouvé'], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        // Supprimé le bâtiment de la base de données
         $entityManager->remove($batiment);
         $entityManager->flush();
 
@@ -301,18 +304,15 @@ class BatimentController extends AbstractController
             return new JsonResponse(['message' => 'Bâtiment non trouvé'], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        // Récup l'ID de la salle depuis la requête JSON
         $data = json_decode($request->getContent(), true);
         $salleId = $data['salleId'];
 
-        // Recherche la salle par ID dans la base de données
         $salle = $salleRepository->find($salleId);
 
         if (!$salle) {
             return new JsonResponse(['message' => 'Salle non trouvée'], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        // Affecte la salle au bâtiment
         $batiment->addSalle($salle);
         $entityManager->flush();
 
@@ -366,18 +366,15 @@ class BatimentController extends AbstractController
             return new JsonResponse(['message' => 'Bâtiment non trouvé'], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        // Récup l'ID de la salle depuis la requête JSON
         $data = json_decode($request->getContent(), true);
         $salleId = $data['salleId'];
 
-        // Recherche la salle par ID dans la base de données
         $salle = $salleRepository->find($salleId);
 
         if (!$salle) {
             return new JsonResponse(['message' => 'Salle non trouvée'], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        // Désaffecte la salle du bâtiment
         $batiment->removeSalle($salle);
         $entityManager->flush();
 
@@ -458,7 +455,6 @@ class BatimentController extends AbstractController
             return new JsonResponse(['message' => 'Paramètre \'nom\' manquant'], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        // Effectue la recherche des bâtiments par nom dans la base de données
         $resultats = $batimentRepository->searchByNom($nom);
 
         return $this->json($resultats, JsonResponse::HTTP_OK, [], ['groups' => ['light']]);
@@ -494,15 +490,13 @@ class BatimentController extends AbstractController
      */
     public function getSallesWithDisponibilitesByBatiment(int $id, BatimentRepository $batimentRepository): JsonResponse
     {
-        // Recherche le bâtiment par ID dans la base de données
+
         $batiment = $batimentRepository->find($id);
 
-        // Si le bâtiment n'est pas trouvé, retourne une réponse 404
         if (!$batiment) {
             return new JsonResponse(['message' => 'Bâtiment non trouvé'], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        // Récup la liste des salles du bâtiment avec leurs disponibilités
         $sallesAvecDisponibilites = $batiment->getSallesWithDisponibilites();
 
         return $this->json($sallesAvecDisponibilites, JsonResponse::HTTP_OK, [], ['groups' => ['full']]);
@@ -538,15 +532,15 @@ class BatimentController extends AbstractController
      */
     public function getCoursByBatiment(int $id, BatimentRepository $batimentRepository): JsonResponse
     {
-        // Recherche le bâtiment par ID dans la base de données
+
         $batiment = $batimentRepository->find($id);
 
-        // Si le bâtiment n'est pas trouvé, retourne une réponse 404
+
         if (!$batiment) {
             return new JsonResponse(['message' => 'Bâtiment non trouvé'], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        // Récup la liste des cours planifiés dans le bâtiment 
+ 
         $cours = $batiment->getCours();
 
 
@@ -603,29 +597,26 @@ class BatimentController extends AbstractController
      */
     public function createSalleInBatiment(int $id, Request $request, BatimentRepository $batimentRepository): JsonResponse
     {
-        // Recherche le bâtiment par ID dans la base de données
+
         $batiment = $batimentRepository->find($id);
 
-        // Si le bâtiment n'est pas trouvé, retourne une réponse 404
+    
         if (!$batiment) {
             return new JsonResponse(['message' => 'Bâtiment non trouvé'], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        // Récupére les données de la requête JSON
+  
         $data = json_decode($request->getContent(), true);
 
-        // Crée la salle dans le bâtiment
         $salle = new Salle();
     
 
-        // associe la salle au bâtiment
         $salle->setBatiment($batiment);
         
         $entityManager = $this->getDoctrine()->getManager();
         $entityManager->persist($salle);
         $entityManager->flush();
 
-        // Retourne une réponse JSON avec un message de confirmation et les détails de la salle créée
         return $this->json(['message' => 'Salle créée avec succès', 'salle' => $salle], JsonResponse::HTTP_CREATED, [], ['groups' => ['light']]);
     }
 }

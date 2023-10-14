@@ -31,10 +31,10 @@ class AbonnementController extends AbstractController
      */
     public function listAbonnements(AbonnementRepository $abonnementRepository): JsonResponse
     {
-        // Récupérez la liste des abonnements depuis la base de données
+     
         $abonnements = $abonnementRepository->findAll();
 
-        // Retournez une réponse JSON avec la liste des abonnements
+ 
         return $this->json($abonnements, JsonResponse::HTTP_OK, [], ['groups' => ['full']]);
     }
     
@@ -65,10 +65,10 @@ class AbonnementController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
         
-        // Créez une nouvelle instance de l'entité Abonnement
+ 
         $abonnement = new Abonnement();
         
-        // Remplissez les propriétés de l'abonnement avec les données de la requête
+    
         $abonnement->setLibelle($data['libelle']);
         $abonnement->setLibelleTechnique($data['libelle_technique']);
         $abonnement->setPrix($data['prix']);
@@ -125,12 +125,11 @@ class AbonnementController extends AbstractController
             return new JsonResponse(['message' => 'Abonnement non trouvé'], JsonResponse::HTTP_NOT_FOUND);
         }
         
-        // Mettez à jour les propriétés de l'abonnement avec les nouvelles données
+      
         $abonnement->setLibelle($data['libelle']);
         $abonnement->setLibelleTechnique($data['libelle_technique']);
         $abonnement->setPrix($data['prix']);
         
-        // Enregistrez les modifications dans la base de données
         $entityManager->flush();
         
         return new JsonResponse(['message' => 'Abonnement mis à jour avec succès'], JsonResponse::HTTP_OK);
@@ -170,7 +169,7 @@ class AbonnementController extends AbstractController
             return new JsonResponse(['message' => 'Abonnement non trouvé'], JsonResponse::HTTP_NOT_FOUND);
         }
         
-        // Supprimez l'abonnement de la base de données
+       
         $entityManager->remove($abonnement);
         $entityManager->flush();
         
@@ -213,10 +212,10 @@ class AbonnementController extends AbstractController
      */
     public function subscribeAbonnement(Etablissement $etablissement, int $abonnementId): JsonResponse
     {
-        // Récupérez l'abonnement par ID depuis le dépôt
+      
         $abonnement = $this->abonnementRepository->find($abonnementId);
 
-        // Si l'abonnement n'est pas trouvé, retournez une réponse 404
+        
         if (!$abonnement) {
             return new JsonResponse(['message' => 'Abonnement non trouvé'], JsonResponse::HTTP_NOT_FOUND);
         }
@@ -226,19 +225,16 @@ class AbonnementController extends AbstractController
             return new JsonResponse(['message' => 'L\'établissement a déjà souscrit à un abonnement'], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        // Souscrivez l'abonnement pour l'établissement
+        
         $etablissement->setAbonnement($abonnement);
 
-        // Mettez à jour la date d'abonnement
+     
         $etablissement->setDateAbonnement(new \DateTime());
 
-        // Mettez à jour le statut d'abonnement
         $etablissement->setStatutAbonnement(true);
 
-        // Enregistrez les modifications dans la base de données
         $this->entityManager->flush();
 
-        // Retournez une réponse JSON avec un message de confirmation
         return new JsonResponse(['message' => 'Abonnement souscrit avec succès'], JsonResponse::HTTP_CREATED);
     }
     /**
@@ -277,26 +273,21 @@ class AbonnementController extends AbstractController
      */
     public function cancelAbonnement(Etablissement $etablissement): JsonResponse
     {
-        // Vérifiez si l'établissement a un abonnement actif
+       
         $abonnement = $etablissement->getAbonnement();
 
         if (!$abonnement) {
             return new JsonResponse(['message' => 'L\'établissement n\'a pas d\'abonnement actif'], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        // Annulez l'abonnement pour l'établissement
         $etablissement->setAbonnement(null);
 
-        // Mettez à jour la date d'abonnement
         $etablissement->setDateAbonnement(null);
 
-        // Mettez à jour le statut d'abonnement
         $etablissement->setStatutAbonnement(false);
 
-        // Enregistrez les modifications dans la base de données
         $this->entityManager->flush();
 
-        // Retournez une réponse JSON avec un message de confirmation
         return new JsonResponse(['message' => 'Abonnement annulé avec succès'], JsonResponse::HTTP_OK);
     }
 
