@@ -29,7 +29,7 @@ class AbonnementController extends AbstractController
 
     /**
      * @OA\Get(
-     *     path="/abonnements",
+     *     path="/api/abonnements",
      *     tags={"Abonnements"},
      *     summary="Récupère les abonnements",
      *     @OA\Response(
@@ -50,7 +50,7 @@ class AbonnementController extends AbstractController
      *     )
      * )
      *
-     * @Rest\Get("/abonnements")
+     * @Rest\Get("/api/abonnements")
      * @Security(name="Bearer")
      */
     public function listAbonnements(): JsonResponse
@@ -65,8 +65,54 @@ class AbonnementController extends AbstractController
     }
 
     /**
+     * @OA\Get(
+     *     path="/api/abonnements/{abonnementId}",
+     *     tags={"Abonnements"},
+     *     summary="Récupère un abonnement par ID",
+     *     @OA\Parameter(
+     *          name="abonnementId",
+     *          in="path",
+     *          required=true,
+     *          description="ID de l'abonnement"
+     *      ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="L'abonnement est retourné",
+     *          @OA\JsonContent(
+     *               type="object",
+     *               @OA\Property(property="id", type="integer"),
+     *               @OA\Property(property="libelle", type="string"),
+     *               @OA\Property(property="libelle_technique", type="string"),
+     *               @OA\Property(property="prix", type="number")
+     *           )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Les paramètres entrés sont incohérents"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur technique"
+     *     )
+     * )
+     *
+     * @Rest\Get("/api/abonnements/{abonnementId}")
+     * @Security(name="Bearer")
+     */
+    public function getAbonnementParId(int $abonnementId): JsonResponse
+    {
+       try {
+            $abonnement = $this->abonnementRepository->find($abonnementId);
+        } catch (\Exception) {
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return $this->json($abonnement, Response::HTTP_OK);
+    }
+
+    /**
      * @OA\Post(
-     *     path="/abonnements",
+     *     path="/api/abonnements",
      *     tags={"Abonnements"},
      *     summary="Créer un nouvel abonnement",
      *     @OA\RequestBody(
@@ -92,7 +138,7 @@ class AbonnementController extends AbstractController
      *      )
      * )
      *
-     * @Rest\Post("/abonnements")
+     * @Rest\Post("/api/abonnements")
      * @Security(name="Bearer")
      */
     public function createAbonnement(Request $request): JsonResponse
@@ -125,7 +171,7 @@ class AbonnementController extends AbstractController
 
     /**
      * @OA\Put(
-     *     path="/abonnements/{id}",
+     *     path="/api/abonnements/{id}",
      *     tags={"Abonnements"},
      *     summary="Mettre à jour les détails d'un abonnement par ID",
      *     @OA\Parameter(
@@ -161,7 +207,7 @@ class AbonnementController extends AbstractController
      *      )
      * )
      *
-     * @Rest\Put("/abonnements/{id}")
+     * @Rest\Put("/api/abonnements/{id}")
      * @Security(name="Bearer")
      */
     public function updateAbonnement(int $id, Request $request): JsonResponse
@@ -199,7 +245,7 @@ class AbonnementController extends AbstractController
 
     /**
      * @OA\Delete(
-     *     path="/abonnements/{id}",
+     *     path="/api/abonnements/{id}",
      *     tags={"Abonnements"},
      *     summary="Supprimer un abonnement par ID",
      *     @OA\Parameter(
@@ -221,9 +267,8 @@ class AbonnementController extends AbstractController
      *          description="Erreur technique"
      *      )
      * )
-     * @Rest\Delete("/abonnements/{id}")
-     * @param int $id
-     * @return JsonResponse
+     * @Rest\Delete("/api/abonnements/{id}")
+     * @Security(name="Bearer")
      */
     public function deleteAbonnement(int $id): JsonResponse
     {
@@ -245,7 +290,7 @@ class AbonnementController extends AbstractController
 
     /**
      * @OA\Patch(
-     *     path="/abonnements/subscribe/{etablissementId}/{abonnementId}",
+     *     path="/api/abonnements/subscribe/{etablissementId}/{abonnementId}",
      *     tags={"Abonnements"},
      *     summary="Souscrire un abonnement pour un établissement",
      *     @OA\Parameter(
@@ -278,10 +323,8 @@ class AbonnementController extends AbstractController
      *      )
      * )
      *
-     * @Rest\Patch("/abonnements/subscribe/{etablissementId}/{abonnementId}")
-     * @param int $etablissementId
-     * @param int $abonnementId
-     * @return JsonResponse
+     * @Rest\Patch("/api/abonnements/subscribe/{etablissementId}/{abonnementId}")
+     * @Security(name="Bearer")
      */
     public function subscribeAbonnement(int $etablissementId, int $abonnementId): JsonResponse
     {
@@ -317,7 +360,7 @@ class AbonnementController extends AbstractController
 
     /**
      * @OA\Patch(
-     *     path="/abonnements/cancel/{etablissementId}/{abonnementId}",
+     *     path="/api/abonnements/cancel/{etablissementId}/{abonnementId}",
      *     tags={"Abonnements"},
      *     summary="Annuler un abonnement pour un établissement",
      *     @OA\Parameter(
@@ -345,10 +388,8 @@ class AbonnementController extends AbstractController
      *          description="Erreur technique"
      *      )
      * )
-     * @Rest\Patch("/abonnements/cancel/{etablissementId}/{abonnementId}")
-     * @param int $etablissementId
-     * @param int $abonnementId
-     * @return JsonResponse
+     * @Rest\Patch("/api/abonnements/cancel/{etablissementId}/{abonnementId}")
+     * @Security(name="Bearer")
      */
     public function cancelAbonnement(int $etablissementId, int $abonnementId): JsonResponse
     {
