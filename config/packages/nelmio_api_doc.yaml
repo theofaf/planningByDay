@@ -35,6 +35,9 @@ nelmio_api_doc:
                 - M. FAFET Théophane : [theophane.fafet2021@campus-eni.fr](mailto:theophane.fafet2021@campus-eni.fr)
                 - M BORDAGE Jordan : [jordan.bordage2019@campus-eni.fr](mailto:jordan.bordage2019@campus-eni.fr)
             version: 1.0.0
+        tags:
+            - name: Abonnements
+              description: Visualisation et gestion des abonnements
     areas:
         default:
             path_patterns:
