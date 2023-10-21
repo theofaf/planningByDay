@@ -36,7 +36,12 @@ class Message
     private ?Utilisateur $emetteur = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[Groups(["nelmio", "message"])]
     private ?DateTimeInterface $dateEnvoi = null;
+
+    #[ORM\Column]
+    #[Groups(["nelmio", "message"])]
+    private ?bool $estLu = false;
 
     public function getId(): ?int
     {
@@ -99,6 +104,18 @@ class Message
     public function setDateEnvoi(?DateTimeInterface $dateEnvoi): self
     {
         $this->dateEnvoi = $dateEnvoi;
+        return $this;
+    }
+
+    public function getEstLu(): bool
+    {
+        return $this->estLu;
+    }
+
+    public function setEstLu(bool $estLu): self
+    {
+        $this->estLu = $estLu;
+
         return $this;
     }
 }

@@ -46,6 +46,8 @@ nelmio_api_doc:
               description: Visualisation et gestion des tickets
             - name: Authentification
               description: Vérifie la validité d'un bearer token
+            - name: Etablissements
+              description: Visualisation et gestion des établissements
     areas:
         default:
             path_patterns:
