@@ -21,6 +21,8 @@ class Statut
     public const STATUT_ANNULE_FRANCISE = 'annulé';
     public const STATUT_VALIDE_FRANCISE = 'validé';
 
+    public const STATUT_PUBLIE_ID = 2;
+
     public const LISTE_STATUT_MESSAGE = [
       self::STATUT_BROUILLON_TECHNIQUE => self::STATUT_BROUILLON_FRANCISE,
       self::STATUT_PUBLIE_TECHNIQUE => self::STATUT_PUBLIE_FRANCISE,

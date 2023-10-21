@@ -41,7 +41,11 @@ nelmio_api_doc:
             - name: Batiments
               description: Visualisation et gestion des bâtiments
             - name: Statuts
-              description: Visualisation et gestion des Statuts
+              description: Visualisation et gestion des statuts
+            - name: Tickets
+              description: Visualisation et gestion des tickets
+            - name: Authentification
+              description: Vérifie la validité d'un bearer token
     areas:
         default:
             path_patterns:

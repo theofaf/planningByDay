@@ -10,13 +10,13 @@ class BatimentService
     {
         if (
             null === $data
-            || null === $data['libelle']
-            || !is_int($data['numVoie'])
-            || null === $data['rue']
-            || null === $data['ville']
-            || null === $data['codePostal']
-            || null === $data['numeroTel']
-            || null === $data['etablissementId']
+            || !isset($data['libelle'])
+            || (!isset($data['numVoie']) || !is_int($data['numVoie']))
+            || !isset($data['rue'])
+            || !isset($data['ville'])
+            || !isset($data['codePostal'])
+            || !isset($data['numeroTel'])
+            || !isset($data['etablissementId'])
         ) {
             return false;
         }

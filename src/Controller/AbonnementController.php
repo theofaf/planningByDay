@@ -141,9 +141,9 @@ class AbonnementController extends AbstractController
 
         if (
             null === $data
-            || $data['libelle'] === null
-            || $data['libelle_technique'] === null
-            || $data['prix'] === null
+            || !isset($data['libelle'])
+            || !isset($data['libelle_technique'])
+            || !isset($data['prix'])
         ) {
             return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
         }
@@ -213,9 +213,9 @@ class AbonnementController extends AbstractController
 
         if (
             null === $data
-            || $data['libelle'] === null
-            || $data['libelle_technique'] === null
-            || $data['prix'] === null
+            || !isset($data['libelle'])
+            || !isset($data['libelle_technique'])
+            || !isset($data['prix'])
         ) {
             return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
         }
