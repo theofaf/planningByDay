@@ -2,187 +2,283 @@
 
 namespace App\Controller;
 
+use App\Entity\Statut;
+use App\Entity\Utilisateur;
+use App\Service\MessageService;
+use Exception;
+use FOS\RestBundle\Controller\Annotations as Rest;
+use Nelmio\ApiDocBundle\Annotation\Security;
+use OpenApi\Annotations as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Entity\Message;
+use DateTime;
+use Doctrine\ORM\EntityManagerInterface;
+use Nelmio\ApiDocBundle\Annotation\Model;
+use Nelmio\ApiDocBundle\Annotation\Operation;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class MessageController extends AbstractController
 {
-    /**
-     * Récupère les messages reçus par un utilisateur spécifié et les marque comme lus.
-     *
-     * @Route("/messages-recus/{id}", methods={"GET"})
-     *
-     * @SWG\Get(
-     *     path="/messages-recus/{id}",
-     *     summary="Récupère les messages reçus par un utilisateur spécifié et les marque comme lus.",
-     *     @SWG\Response(
-     *         response=200,
-     *         description="Messages reçus",
-     *         @Model(type=Message::class, groups={"read"})
-     *     ),
-     *     @SWG\Response(
-     *         response=404,
-     *         description="Utilisateur non trouvé."
-     *     )
-     * )
-     */
-    public function messagesRecus(int $id): JsonResponse
-    {
-        
-        $utilisateur = $this->entityManager->getRepository(Utilisateur::class)->find($id);
-
-       
-        if (!$utilisateur) {
-            return new JsonResponse(['message' => 'Utilisateur non trouvé'], JsonResponse::HTTP_NOT_FOUND);
-        }
-
-        
-        $messages = $this->entityManager->getRepository(Message::class)->findBy(['receveur' => $utilisateur]);
-
-        
-        foreach ($messages as $message) {
-            $message->getStatut()->setLibelle('lu'); 
-        }
-
-        
-        $this->entityManager->flush();
-
-        
-        return new JsonResponse($messages, JsonResponse::HTTP_OK);
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+        private readonly SerializerInterface $serializer,
+        private readonly MessageService $serviceMessage,
+    ) {
     }
+
     /**
-     * Envoie un message à un utilisateur spécifié et le marque comme non lu.
-     *
-     * @Route("/envoyer-message", methods={"POST"})
-     *
-     * @SWG\Post(
-     *     path="/envoyer-message",
-     *     summary="Envoie un message à un utilisateur spécifié et le marque comme non lu.",
-     *     @SWG\Parameter(
-     *         name="Contenu",
-     *         in="body",
-     *         required=true,
-     *         @SWG\Schema(type="string")
-     *     ),
-     *     @SWG\Parameter(
-     *         name="Emetteur (ID)",
-     *         in="body",
-     *         required=true,
-     *         @SWG\Schema(type="integer")
-     *     ),
-     *     @SWG\Parameter(
-     *         name="Receveur (ID)",
-     *         in="body",
-     *         required=true,
-     *         @SWG\Schema(type="integer")
-     *     ),
-     *     @SWG\Response(
-     *         response=201,
-     *         description="Message envoyé avec succès.",
-     *         @Model(type=Message::class, groups={"read"})
-     *     ),
-     *     @SWG\Response(
-     *         response=400,
-     *         description="Requête invalide."
+     * @OA\Get(
+     *     path="/api/messages/{utilisateurId}/recus",
+     *     tags={"Messages"},
+     *     summary="Récupère les messages reçus pour un utilisateur",
+     *     @OA\Parameter(
+     *          name="utilisateurId",
+     *          @OA\Schema(type="integer"),
+     *          in="path",
+     *          required=true,
+     *          description="ID du receveur des messages"
+     *      ),
+     *     @OA\Parameter(
+     *           name="isGrouperParEmetteur",
+     *           @OA\Schema(type="boolean"),
+     *           in="query",
+     *           required=false,
+     *           description="Booléen (0,1) indiquant si on doit grouper les messages reçus par émetteur"
+     *       ),
+     *     @OA\Response(
+     *           response=200,
+     *           description="Les messages reçus sont retournés",
+     *           @OA\JsonContent(
+     *               type="array",
+     *               @OA\Items(ref=@Model(type=Message::class, groups={"message"}))
+     *           )
+     *      ),
+     *     @OA\Response(
+     *          response=404,
+     *          description="L'utilisateur n'a pas été trouvé"
+     *      ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur technique"
      *     )
      * )
-     */
-    public function envoyerMessage(Request $request): JsonResponse
-    {
-       
-        $data = json_decode($request->getContent(), true);
-
-        
-        $message = new Message();
-        $message->setContenu($data['contenu']);
-
-        
-        $statutNonLu = $this->entityManager->getRepository(Statut::class)->findOneBy(['libelle' => 'non lu']);
-
-        
-        if (!$statutNonLu) {
-            return new JsonResponse(['message' => 'Statut "non lu" non trouvé'], JsonResponse::HTTP_NOT_FOUND);
-        }
-
-       
-        $message->setStatut($statutNonLu);
-
-        
-        $emetteur = $this->entityManager->getRepository(Utilisateur::class)->find($data['emetteur']);
-        $receveur = $this->entityManager->getRepository(Utilisateur::class)->find($data['receveur']);
-
-        
-        if (!$emetteur || !$receveur) {
-            return new JsonResponse(['message' => 'Emetteur ou Receveur non trouvé'], JsonResponse::HTTP_NOT_FOUND);
-        }
-
-       
-        $message->setEmetteur($emetteur);
-        $message->setReceveur($receveur);
-
-        
-        $message->setDateEnvoi(new \DateTime());
-
-        
-        $this->entityManager->persist($message);
-        $this->entityManager->flush();
-
-        
-        return new JsonResponse(['message' => 'Message envoyé avec succès', 'message' => $message->toArray()], JsonResponse::HTTP_CREATED);
-    }
-    /**
-     * Récupère tous les messages reçus par un utilisateur, regroupés par expéditeur.
      *
-     * @Route("/messages-recus/groupes/{id}", methods={"GET"})
-     *
-     * @SWG\Get(
-     *     path="/messages-recus/groupes/{id}",
-     *     summary="Récupère tous les messages reçus par un utilisateur, regroupés par expéditeur.",
-     *     @SWG\Response(
-     *         response=200,
-     *         description="Messages reçus, groupés par expéditeur",
-     *         @Model(type=Message::class, groups={"read"})
-     *     ),
-     *     @SWG\Response(
-     *         response=404,
-     *         description="Utilisateur non trouvé."
-     *     )
-     * )
+     * @Rest\Get("/api/messages/{utilisateurId}/recus")
+     * @Security(name="Bearer")
      */
-    public function messagesRecusGroupes(int $id): JsonResponse
+    public function getMessagesRecus(int $utilisateurId, ?Request $request): JsonResponse
     {
-        
-        $utilisateur = $this->entityManager->getRepository(Utilisateur::class)->find($id);
+        $isGrouperParEmettteur = boolval($request?->query?->get('isGrouperParEmetteur'));
 
-        
-        if (!$utilisateur) {
-            return new JsonResponse(['message' => 'Utilisateur non trouvé'], JsonResponse::HTTP_NOT_FOUND);
-        }
+        try {
+            $receveur = $this->em->getRepository(Utilisateur::class)->find($utilisateurId);
 
-        
-        $messages = $this->entityManager->getRepository(Message::class)->findBy(['receveur' => $utilisateur]);
-
-        
-        $messagesGroupes = [];
-
-        foreach ($messages as $message) {
-            $expediteurId = $message->getEmetteur()->getId();
-
-            
-            if (!array_key_exists($expediteurId, $messagesGroupes)) {
-                $messagesGroupes[$expediteurId] = [
-                    'expediteur' => $message->getEmetteur(),
-                    'messages' => [],
-                ];
+            if (!$receveur) {
+                return new JsonResponse(['message' => "L'utilisateur n'existe pas"], Response::HTTP_NOT_FOUND);
             }
 
-            
-            $messagesGroupes[$expediteurId]['messages'][] = $message;
+            $messagesRecus = $this->em->getRepository(Message::class)->findBy(['receveur' => $receveur->getId()]);
+
+            if ($isGrouperParEmettteur) {
+                $listeMessagesGroupes = [];
+
+                foreach ($messagesRecus as $unMessage) {
+                    $emetteurId = $unMessage->getEmetteur()->getId();
+                    if (!isset($listeMessagesGroupes[$emetteurId])) {
+                        $listeMessagesGroupes[$emetteurId] = [];
+                    }
+
+                    $listeMessagesGroupes[$emetteurId][] = $this->serializer->serialize($unMessage, 'json', ['groups' => 'message']);
+                }
+
+                return $this->json($listeMessagesGroupes, Response::HTTP_OK);
+            }
+
+        } catch (Exception $e) {
+            var_dump($e);
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        
-        return new JsonResponse(array_values($messagesGroupes), JsonResponse::HTTP_OK);
+        return new JsonResponse($this->serializer->serialize($messagesRecus, 'json', ['groups' => 'message']), Response::HTTP_OK);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/messages/{utilisateurId}/envoyes",
+     *     tags={"Messages"},
+     *     summary="Récupère les messages envoyés d'un utilisateur",
+     *     @OA\Parameter(
+     *          name="utilisateurId",
+     *          @OA\Schema(type="integer"),
+     *          in="path",
+     *          required=true,
+     *          description="ID de l'émetteur des messages"
+     *      ),
+     *     @OA\Response(
+     *           response=200,
+     *           description="Les messages envoyés sont retournés",
+     *           @OA\JsonContent(
+     *               type="array",
+     *               @OA\Items(ref=@Model(type=Message::class, groups={"message"}))
+     *           )
+     *      ),
+     *     @OA\Response(
+     *          response=404,
+     *          description="L'utilisateur n'a pas été trouvé"
+     *      ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur technique"
+     *     )
+     * )
+     *
+     * @Rest\Get("/api/messages/{utilisateurId}/envoyes")
+     * @Security(name="Bearer")
+     */
+    public function getMessagesEnvoyes(int $utilisateurId): JsonResponse
+    {
+        try {
+            $receveur = $this->em->getRepository(Utilisateur::class)->find($utilisateurId);
+
+            if (!$receveur) {
+                return new JsonResponse(['message' => "L'utilisateur n'existe pas"], Response::HTTP_NOT_FOUND);
+            }
+
+            $messagesEnvoyes = $this->em->getRepository(Message::class)->findBy(['emetteur' => $receveur->getId()]);
+        } catch (Exception) {
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return new JsonResponse($this->serializer->serialize($messagesEnvoyes, 'json', ['groups' => 'message']), Response::HTTP_OK);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/messages",
+     *     tags={"Messages"},
+     *     summary="Créer un nouveau message",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Données du message à créer",
+     *         @OA\JsonContent(ref=@Model(type=Message::class, groups={"nelmio"}))
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Message créé avec succès",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(ref=@Model(type=Message::class, groups={"message"}))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Données invalides"
+     *     ),
+     *     @OA\Response(
+     *          response=404,
+     *          description="Emetteur ou receveur non trouvé"
+     *      ),
+     *     @OA\Response(
+     *          response=500,
+     *          description="Erreur technique"
+     *      )
+     * )
+     *
+     * @Rest\Post("/api/messages")
+     * @Security(name="Bearer")
+     */
+    public function postMessage(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (!$this->serviceMessage->isDataValide($data)) {
+            return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $message = (new Message())->setContenu($data['contenu']);
+
+        try {
+            $receveur = $this->em->getRepository(Utilisateur::class)->find($data['receveurId']);
+            $emetteur = $this->em->getRepository(Utilisateur::class)->find($data['emetteurId']);
+            $statut = $this->em->getRepository(Statut::class)->find(Statut::STATUT_PUBLIE_ID);
+            if (!$receveur || !$emetteur) {
+                return new JsonResponse(['message' => 'Émetteur ou receveur non trouvé'], Response::HTTP_NOT_FOUND);
+            }
+
+            $message
+                ->setReceveur($receveur)
+                ->setEmetteur($emetteur)
+                ->setStatut($statut)
+                ->setDateEnvoi(new DateTime())
+            ;
+            $this->em->persist($message);
+            $this->em->flush();
+        } catch (Exception) {
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        $messageSerealize = $this->serializer->serialize($message, 'json', ['groups' => 'message']);
+        return new JsonResponse(['message' => 'Message créé avec succès', $messageSerealize], Response::HTTP_CREATED);
+    }
+
+    /**
+     * @OA\Put(
+     *     path="/api/messages/{messageId}",
+     *     tags={"Messages"},
+     *     summary="Changer la visibilité d'un message",
+     *     description="Cette action permet de passer un message à lu/non_lu",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Données du message à modifier",
+     *         @OA\JsonContent(ref=@Model(type=Message::class, groups={"nelmio"}))
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Message modifié avec succès",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(ref=@Model(type=Message::class, groups={"message"}))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Données invalides"
+     *     ),
+     *     @OA\Response(
+     *          response=500,
+     *          description="Erreur technique"
+     *      )
+     * )
+     *
+     * @Rest\Put("/api/messages/{messageId}")
+     * @Security(name="Bearer")
+     */
+    public function putMessage(int $messageId, Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (!isset($data['estLu'])) {
+            return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $message = $this->em->getRepository(Message::class)->find($messageId);
+            if (!$message) {
+                return new JsonResponse(['message' => 'Message non trouvé'], Response::HTTP_NOT_FOUND);
+            }
+
+            $message->setEstLu(boolval($data['estLu']));
+            $this->em->flush();
+        } catch (Exception) {
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        $messageSerealize = $this->serializer->serialize($message, 'json', ['groups' => 'message']);
+        return new JsonResponse(['message' => 'Message modifié avec succès', $messageSerealize], Response::HTTP_CREATED);
     }
 }
 

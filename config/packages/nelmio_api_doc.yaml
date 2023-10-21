@@ -48,6 +48,20 @@ nelmio_api_doc:
               description: Vérifie la validité d'un bearer token
             - name: Etablissements
               description: Visualisation et gestion des établissements
+            - name: Messages
+              description: Visualisation et gestion des messages
+            - name: Sessions
+              description: Visualisation et gestion des sessions
+            - name: Salles
+              description: Visualisation et gestion des salles
+            - name: Classes
+              description: Visualisation et gestion des classes
+            - name: Cursus
+              description: Visualisation et gestion des cursus
+            - name: Utilisateurs
+              description: Visualisation et gestion des utilisateurs
+            - name: Modules
+              description: Visualisation et gestion des modules
     areas:
         default:
             path_patterns:
