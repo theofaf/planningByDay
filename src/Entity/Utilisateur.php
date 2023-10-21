@@ -34,6 +34,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column]
     #[Groups(["nelmio", "utilisateur"])]
+    /** @var string[] $roles */
     private array $roles = [];
 
     /**
