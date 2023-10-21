@@ -18,10 +18,13 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Serializer\SerializerInterface;
+
 class AbonnementController extends AbstractController
 {
     public function __construct(
         private readonly EntityManagerInterface $em,
+        private readonly SerializerInterface $serializer,
     ) {
     }
 
@@ -98,7 +101,7 @@ class AbonnementController extends AbstractController
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new JsonResponse($abonnement, Response::HTTP_CREATED);
+        return $this->json($abonnement, Response::HTTP_OK);
     }
 
     /**
@@ -158,7 +161,8 @@ class AbonnementController extends AbstractController
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new JsonResponse(['message' => 'Abonnement créé avec succès'], Response::HTTP_CREATED);
+        $abonnementSerialize = $this->serializer->serialize($abonnement, 'json', ['groups' => 'abonnement']);
+        return new JsonResponse(['message' => 'Abonnement créé avec succès' , 'abonnement' => $abonnementSerialize], Response::HTTP_CREATED);
     }
 
     /**
@@ -233,7 +237,8 @@ class AbonnementController extends AbstractController
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new JsonResponse(['message' => 'Abonnement mis à jour avec succès'], Response::HTTP_OK);
+        $abonnementSerialize = $this->serializer->serialize($abonnement, 'json', ['groups' => 'abonnement']);
+        return new JsonResponse(['message' => 'Abonnement mis à jour avec succès', 'abonnement' => $abonnementSerialize], Response::HTTP_OK);
     }
 
     /**
@@ -302,7 +307,7 @@ class AbonnementController extends AbstractController
      *         description="ID de l'abonnement"
      *     ),
      *     @OA\Response(
-     *         response=201,
+     *         response=200,
      *         description="Abonnement souscrit avec succès"
      *     ),
      *     @OA\Response(
@@ -351,7 +356,7 @@ class AbonnementController extends AbstractController
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new JsonResponse(['message' => 'Abonnement souscrit avec succès'], Response::HTTP_CREATED);
+        return new JsonResponse(['message' => 'Abonnement souscrit avec succès'], Response::HTTP_OK);
     }
 
     /**

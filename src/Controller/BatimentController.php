@@ -166,7 +166,7 @@ class BatimentController extends AbstractController
         $codePostal = $request->query->get('codePostal');
 
         if (null == $libelle && null == $ville && null == $codePostal) {
-            return new JsonResponse(['message' => "Paramètre manquant : Veuillez renseigner au moins : 'nom' ou 'ville' ou 'codePostal'"], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['message' => "Paramètre manquant : Veuillez renseigner au moins : 'libelle ou 'ville' ou 'codePostal'"], Response::HTTP_BAD_REQUEST);
         }
 
         try {

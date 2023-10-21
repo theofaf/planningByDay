@@ -40,6 +40,8 @@ nelmio_api_doc:
               description: Visualisation et gestion des abonnements
             - name: Batiments
               description: Visualisation et gestion des bâtiments
+            - name: Statuts
+              description: Visualisation et gestion des Statuts
     areas:
         default:
             path_patterns:
