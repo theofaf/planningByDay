@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\BatimentRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: BatimentRepository::class)]
 class Batiment
@@ -12,31 +13,40 @@ class Batiment
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["nelmio", "batiment", "etablissement", "salle"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 30)]
+    #[Groups(["nelmio", "batiment"])]
     private ?string $libelle = null;
 
     #[ORM\Column]
+    #[Groups(["nelmio", "batiment"])]
     private ?int $numVoie = null;
 
     #[ORM\Column(length: 30)]
+    #[Groups(["nelmio", "batiment"])]
     private ?string $rue = null;
 
     #[ORM\Column(length: 30)]
+    #[Groups(["nelmio", "batiment"])]
     private ?string $ville = null;
 
     #[ORM\Column]
+    #[Groups(["nelmio", "batiment"])]
     private ?int $codePostal = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(["nelmio", "batiment"])]
     private ?string $numeroTel = null;
 
     #[ORM\ManyToOne(targetEntity: Etablissement::class, inversedBy: 'batiments')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(["nelmio", "batiment"])]
     private ?Etablissement $etablissement = null;
 
     #[ORM\OneToMany(mappedBy: 'batiment', targetEntity: Salle::class)]
+    #[Groups(["nelmio", "batiment"])]
     /** @var ArrayCollection $salles */
     private $salles;
 

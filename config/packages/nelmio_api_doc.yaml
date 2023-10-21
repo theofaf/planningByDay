@@ -38,6 +38,8 @@ nelmio_api_doc:
         tags:
             - name: Abonnements
               description: Visualisation et gestion des abonnements
+            - name: Batiments
+              description: Visualisation et gestion des bâtiments
     areas:
         default:
             path_patterns:

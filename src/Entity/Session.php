@@ -6,6 +6,7 @@ use App\Repository\SessionRepository;
 use DateTimeInterface;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: SessionRepository::class)]
 class Session
@@ -13,28 +14,35 @@ class Session
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["nelmio", "session", "utilisateur", "classe", "salle"])]
     private ?int $id = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Groups(["nelmio", "session"])]
     private ?DateTimeInterface $dateDebut = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Groups(["nelmio", "session"])]
     private ?DateTimeInterface $dateFin = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(["nelmio", "session"])]
     private ?ModuleFormation $moduleFormation = null;
 
     #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'sessions')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(["nelmio", "session"])]
     private ?Utilisateur $utilisateur = null;
 
     #[ORM\ManyToOne(targetEntity: Classe::class, inversedBy: 'sessions')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(["nelmio", "session"])]
     private ?Classe $classe = null;
 
     #[ORM\ManyToOne(targetEntity: Salle::class, inversedBy: 'sessions')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(["nelmio", "session"])]
     private ?Salle $salle = null;
 
     public function getId(): ?int

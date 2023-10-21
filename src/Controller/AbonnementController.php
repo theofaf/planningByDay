@@ -21,8 +21,6 @@ use Symfony\Component\HttpFoundation\Response;
 class AbonnementController extends AbstractController
 {
     public function __construct(
-        private readonly AbonnementRepository $abonnementRepository,
-        private readonly EtablissementRepository $etablissementRepository,
         private readonly EntityManagerInterface $em,
     ) {
     }
@@ -41,10 +39,6 @@ class AbonnementController extends AbstractController
      *          )
      *     ),
      *     @OA\Response(
-     *         response=400,
-     *         description="Les paramètres entrés sont incohérents"
-     *     ),
-     *     @OA\Response(
      *         response=500,
      *         description="Erreur technique"
      *     )
@@ -53,10 +47,10 @@ class AbonnementController extends AbstractController
      * @Rest\Get("/api/abonnements")
      * @Security(name="Bearer")
      */
-    public function listAbonnements(): JsonResponse
+    public function getAbonnements(): JsonResponse
     {
         try {
-            $abonnements = $this->abonnementRepository->findAll();
+            $abonnements = $this->em->getRepository(Abonnement::class)->findAll();
         } catch (\Exception) {
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -71,6 +65,7 @@ class AbonnementController extends AbstractController
      *     summary="Récupère un abonnement par ID",
      *     @OA\Parameter(
      *          name="abonnementId",
+     *          @OA\Schema(type="integer"),
      *          in="path",
      *          required=true,
      *          description="ID de l'abonnement"
@@ -87,10 +82,6 @@ class AbonnementController extends AbstractController
      *           )
      *     ),
      *     @OA\Response(
-     *         response=400,
-     *         description="Les paramètres entrés sont incohérents"
-     *     ),
-     *     @OA\Response(
      *         response=500,
      *         description="Erreur technique"
      *     )
@@ -102,12 +93,12 @@ class AbonnementController extends AbstractController
     public function getAbonnementParId(int $abonnementId): JsonResponse
     {
        try {
-            $abonnement = $this->abonnementRepository->find($abonnementId);
+            $abonnement = $this->em->getRepository(Abonnement::class)->find($abonnementId);
         } catch (\Exception) {
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return $this->json($abonnement, Response::HTTP_OK);
+        return new JsonResponse($abonnement, Response::HTTP_CREATED);
     }
 
     /**
@@ -141,12 +132,13 @@ class AbonnementController extends AbstractController
      * @Rest\Post("/api/abonnements")
      * @Security(name="Bearer")
      */
-    public function createAbonnement(Request $request): JsonResponse
+    public function postAbonnement(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
         if (
-            $data['libelle'] === null
+            null === $data
+            || $data['libelle'] === null
             || $data['libelle_technique'] === null
             || $data['prix'] === null
         ) {
@@ -171,11 +163,12 @@ class AbonnementController extends AbstractController
 
     /**
      * @OA\Put(
-     *     path="/api/abonnements/{id}",
+     *     path="/api/abonnements/{abonnementId}",
      *     tags={"Abonnements"},
      *     summary="Mettre à jour les détails d'un abonnement par ID",
      *     @OA\Parameter(
-     *         name="id",
+     *         name="abonnementId",
+     *         @OA\Schema(type="integer"),
      *         in="path",
      *         required=true,
      *         description="ID de l'abonnement"
@@ -207,10 +200,10 @@ class AbonnementController extends AbstractController
      *      )
      * )
      *
-     * @Rest\Put("/api/abonnements/{id}")
+     * @Rest\Put("/api/abonnements/{abonnementId}")
      * @Security(name="Bearer")
      */
-    public function updateAbonnement(int $id, Request $request): JsonResponse
+    public function putAbonnement(int $abonnementId, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
@@ -223,7 +216,7 @@ class AbonnementController extends AbstractController
             return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
         }
 
-        $abonnement = $this->em->getRepository(Abonnement::class)->find($id);
+        $abonnement = $this->em->getRepository(Abonnement::class)->find($abonnementId);
 
         if (!$abonnement) {
             return new JsonResponse(['message' => 'Abonnement non trouvé'], Response::HTTP_NOT_FOUND);
@@ -245,17 +238,18 @@ class AbonnementController extends AbstractController
 
     /**
      * @OA\Delete(
-     *     path="/api/abonnements/{id}",
+     *     path="/api/abonnements/{abonnementId}",
      *     tags={"Abonnements"},
      *     summary="Supprimer un abonnement par ID",
      *     @OA\Parameter(
-     *         name="id",
+     *         name="abonnementId",
+     *         @OA\Schema(type="integer"),
      *         in="path",
      *         required=true,
      *         description="ID de l'abonnement à supprimer"
      *     ),
      *     @OA\Response(
-     *         response=200,
+     *         response=204,
      *         description="Abonnement supprimé avec succès"
      *     ),
      *     @OA\Response(
@@ -267,12 +261,12 @@ class AbonnementController extends AbstractController
      *          description="Erreur technique"
      *      )
      * )
-     * @Rest\Delete("/api/abonnements/{id}")
+     * @Rest\Delete("/api/abonnements/{abonnementId}")
      * @Security(name="Bearer")
      */
-    public function deleteAbonnement(int $id): JsonResponse
+    public function deleteAbonnement(int $abonnementId): JsonResponse
     {
-        $abonnement = $this->em->getRepository(Abonnement::class)->find($id);
+        $abonnement = $this->em->getRepository(Abonnement::class)->find($abonnementId);
 
         if (!$abonnement) {
             return new JsonResponse(['message' => 'Abonnement non trouvé'], Response::HTTP_NOT_FOUND);
@@ -285,7 +279,7 @@ class AbonnementController extends AbstractController
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new JsonResponse(['message' => 'Abonnement supprimé avec succès'], Response::HTTP_OK);
+        return new JsonResponse(['message' => 'Abonnement supprimé avec succès'], Response::HTTP_NO_CONTENT);
     }
 
     /**
@@ -295,12 +289,14 @@ class AbonnementController extends AbstractController
      *     summary="Souscrire un abonnement pour un établissement",
      *     @OA\Parameter(
      *         name="etablissementId",
+     *         @OA\Schema(type="integer"),
      *         in="path",
      *         required=true,
      *         description="ID de l'établissement"
      *     ),
      *     @OA\Parameter(
      *         name="abonnementId",
+     *         @OA\Schema(type="integer"),
      *         in="path",
      *         required=true,
      *         description="ID de l'abonnement"
@@ -328,8 +324,8 @@ class AbonnementController extends AbstractController
      */
     public function subscribeAbonnement(int $etablissementId, int $abonnementId): JsonResponse
     {
-        $abonnement = $this->abonnementRepository->find($abonnementId);
-        $etablissement = $this->etablissementRepository->find($etablissementId);
+        $abonnement = $this->em->getRepository(Abonnement::class)->find($abonnementId);
+        $etablissement = $this->em->getRepository(Etablissement::class)->find($etablissementId);
 
         if (!$abonnement) {
             return new JsonResponse(['message' => 'Abonnement non trouvé'], Response::HTTP_NOT_FOUND);
@@ -365,6 +361,7 @@ class AbonnementController extends AbstractController
      *     summary="Annuler un abonnement pour un établissement",
      *     @OA\Parameter(
      *         name="etablissementId",
+     *         @OA\Schema(type="integer"),
      *         in="path",
      *         required=true,
      *         description="ID de l'établissement"
@@ -380,9 +377,13 @@ class AbonnementController extends AbstractController
      *         description="Abonnement annulé avec succès"
      *     ),
      *     @OA\Response(
-     *         response=404,
-     *         description="Établissement ou abonnement non trouvé"
+     *         response=400,
+     *         description="L'établissement ne possède pas d'abonnement"
      *     ),
+     *     @OA\Response(
+     *          response=404,
+     *          description="Établissement ou abonnement non trouvé"
+     *      ),
      *     @OA\Response(
      *          response=500,
      *          description="Erreur technique"
@@ -393,8 +394,8 @@ class AbonnementController extends AbstractController
      */
     public function cancelAbonnement(int $etablissementId, int $abonnementId): JsonResponse
     {
-        $abonnement = $this->abonnementRepository->find($abonnementId);
-        $etablissement = $this->etablissementRepository->find($etablissementId);
+        $abonnement = $this->em->getRepository(Abonnement::class)->find($abonnementId);
+        $etablissement = $this->em->getRepository(Etablissement::class)->find($etablissementId);
 
         if (!$abonnement) {
             return new JsonResponse(['message' => 'Abonnement non trouvé'], Response::HTTP_NOT_FOUND);

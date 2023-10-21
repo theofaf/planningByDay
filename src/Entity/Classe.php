@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\ClasseRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: ClasseRepository::class)]
 class Classe
@@ -12,19 +13,24 @@ class Classe
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["nelmio", "classe", "cursus"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 30)]
+    #[Groups(["nelmio", "classe"])]
     private ?string $libelle = null;
 
     #[ORM\Column]
+    #[Groups(["nelmio", "classe"])]
     private ?int $nombreEleves = null;
 
     #[ORM\ManyToOne(targetEntity: Cursus::class, inversedBy: 'classes')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(["nelmio", "classe"])]
     private ?Cursus $cursus = null;
 
     #[ORM\OneToMany(mappedBy: 'classe', targetEntity: Session::class)]
+    #[Groups(["nelmio", "classe"])]
     /** @var ArrayCollection $sessions */
     private $sessions;
 

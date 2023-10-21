@@ -9,6 +9,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
 class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
@@ -16,18 +17,23 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["nelmio", "utilisateur", "etablissement", "ticket", "message"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
+    #[Groups(["nelmio", "utilisateur"])]
     private ?string $email = null;
 
     #[ORM\Column(length: 50)]
+    #[Groups(["nelmio", "utilisateur"])]
     private ?string $nom = null;
 
     #[ORM\Column(length: 50)]
+    #[Groups(["nelmio", "utilisateur"])]
     private ?string $prenom = null;
 
     #[ORM\Column]
+    #[Groups(["nelmio", "utilisateur"])]
     private array $roles = [];
 
     /**
@@ -37,20 +43,25 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $password = null;
 
     #[ORM\OneToMany(mappedBy: 'receveur', targetEntity: Message::class)]
+    #[Groups(["nelmio", "utilisateur"])]
     private $messagesRecues;
 
     #[ORM\OneToMany(mappedBy: 'emetteur', targetEntity: Message::class)]
+    #[Groups(["nelmio", "utilisateur"])]
     private $messagesEnvoyees;
 
     #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: Ticket::class)]
+    #[Groups(["nelmio", "utilisateur"])]
     /** @var ArrayCollection $tickets */
     private $tickets;
 
     #[ORM\ManyToOne(targetEntity: Etablissement::class, inversedBy: 'utilisateurs')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(["nelmio", "utilisateur"])]
     private ?Etablissement $etablissement = null;
 
     #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: Session::class)]
+    #[Groups(["nelmio", "utilisateur"])]
     /** @var ArrayCollection $sessions */
     private $sessions;
 
@@ -59,9 +70,11 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
      * (si la dernière action date de plus de 10 min)
      */
     #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[Groups(["nelmio", "utilisateur"])]
     private ?DateTimeInterface $dateDerniereAction = null;
 
     #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: ModuleFormationUtilisateur::class)]
+    #[Groups(["nelmio", "utilisateur"])]
     /** @var ArrayCollection $listeModulesFormations */
     private $listeModulesFormations;
 

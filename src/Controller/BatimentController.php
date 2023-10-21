@@ -2,621 +2,417 @@
 
 namespace App\Controller;
 
+use App\Entity\Batiment;
+use App\Entity\Etablissement;
+use App\Repository\BatimentRepository;
+use App\Service\BatimentService;
+use Doctrine\ORM\EntityManagerInterface;
+use Exception;
+use FOS\RestBundle\Controller\Annotations as Rest;
+use Nelmio\ApiDocBundle\Annotation\Security;
+use OpenApi\Annotations as OA;
+use Nelmio\ApiDocBundle\Annotation\Model;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class BatimentController extends AbstractController
 {
-     /**
-     * Crée un nouveau bâtiment.
-     *
-     * @Route("/create", methods={"POST"})
-     *
-     * @SWG\Tag(name="Batiment")
-     * @SWG\Parameter(
-     *     name="body",
-     *     in="body",
-     *     required=true,
-     *     description="Données du bâtiment à créer",
-     *     @SWG\Schema(
-     *         type="object",
-     *         @SWG\Property(property="nom", type="string", description="Nom du bâtiment"),
-     *         @SWG\Property(property="adresse", type="string", description="Adresse du bâtiment"),
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+        private readonly BatimentService $serviceBatiment,
+        private readonly SerializerInterface $serializer,
+    ) {
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/batiments",
+     *     tags={"Batiments"},
+     *     summary="Récupère tous les bâtiments",
+     *     @OA\Response(
+     *          response=200,
+     *          description="Les batiments de tous les bâtiments sont retournés",
+     *          @OA\JsonContent(
+     *              type="array",
+     *              @OA\Items(ref=@Model(type=Batiment::class, groups={"batiment"}))
+     *          )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur technique"
      *     )
      * )
-     * @SWG\Response(
-     *     response=201,
-     *     description="Bâtiment créé avec succès",
-     *     @SWG\Schema(
-     *         type="object",
-     *         @SWG\Property(property="message", type="string", description="Message de confirmation"),
-     *     )
-     * )
-     * @Security("is_granted('ROLE_RESPONSABLE_PLANNING')")
-     * @NelmioSecurity(name="Bearer")
+     *
+     * @Rest\Get("/api/batiments")
+     * @Security(name="Bearer")
      */
-    public function createBatiment(Request $request): JsonResponse
+    public function getBatiments(): JsonResponse
+    {
+        try {
+            $batiments = $this->em->getRepository(Batiment::class)->findAll();
+        } catch (Exception) {
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return new JsonResponse($this->serializer->serialize($batiments, 'json', ['groups' => 'batiment']), Response::HTTP_OK);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/batiments/etablissement/{etablissementId}",
+     *     tags={"Batiments"},
+     *     summary="Récupère les bâtiments d'un établissement",
+     *     @OA\Parameter(
+     *          name="etablissementId",
+     *          @OA\Schema(type="integer"),
+     *          in="path",
+     *          required=true,
+     *          description="ID de l'établissement"
+     *      ),
+     *     @OA\Response(
+     *           response=200,
+     *           description="La liste des bâtiments d'un établissement est retournée",
+     *           @OA\JsonContent(
+     *               type="array",
+     *               @OA\Items(ref=@Model(type=Batiment::class, groups={"batiment"}))
+     *           )
+     *      ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="L'établissement n'a pas été trouvé"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur technique"
+     *     )
+     * )
+     *
+     * @Rest\Get("/api/batiments/etablissement/{etablissementId}")
+     * @Security(name="Bearer")
+     */
+    public function getBatimentsParEtablissementId(int $etablissementId): JsonResponse
+    {
+        try {
+            $etablissement = $this->em->getRepository(Etablissement::class)->find($etablissementId);
+
+            if (!$etablissement) {
+                return new JsonResponse(['message' => "L'établissement n'existe pas"], Response::HTTP_NOT_FOUND);
+            }
+
+            $batiments = $this->em->getRepository(Batiment::class)->findBy(['etablissement' => $etablissement->getId()]);
+        } catch (Exception) {
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return new JsonResponse($this->serializer->serialize($batiments, 'json', ['groups' => 'batiment']), Response::HTTP_OK);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/batiments/recherche-par-filtres",
+     *     tags={"Batiments"},
+     *     summary="Récupère les bâtiments correspondant aux filtres",
+     *     @OA\Parameter(
+     *          name="libelle",
+     *          @OA\Schema(type="string"),
+     *          in="query",
+     *          required=false,
+     *          description="Libellé correspondant aux bâtiments que l'on souhaite récupérer"
+     *
+     *      ),
+     *     @OA\Parameter(
+     *           name="ville",
+     *           @OA\Schema(type="string"),
+     *           in="query",
+     *           required=false,
+     *           description="Ville correspondant aux bâtiments que l'on souhaite récupérer"
+     *       ),
+     *     @OA\Parameter(
+     *            name="codePostal",
+     *            @OA\Schema(type="string"),
+     *            in="query",
+     *            required=false,
+     *            description="Code postal correspondant aux bâtiments que l'on souhaite récupérer"
+     *        ),
+     *     @OA\Response(
+     *            response=200,
+     *            description="La liste des bâtiments correspondant aux filtres est retournée",
+     *            @OA\JsonContent(
+     *                type="array",
+     *                @OA\Items(ref=@Model(type=Batiment::class, groups={"batiment"}))
+     *            )
+     *       ),
+     *     @OA\Response(
+     *          response=400,
+     *          description="Données invalides"
+     *      ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur technique"
+     *     )
+     * )
+     *
+     * @Rest\Get("/api/batiments/recherche-par-filtres")
+     * @Security(name="Bearer")
+     */
+    public function getBatimentsByFiltres(Request $request): JsonResponse
+    {
+        $libelle = $request->query->get('libelle');
+        $ville = $request->query->get('ville');
+        $codePostal = $request->query->get('codePostal');
+
+        if (null == $libelle && null == $ville && null == $codePostal) {
+            return new JsonResponse(['message' => "Paramètre manquant : Veuillez renseigner au moins : 'nom' ou 'ville' ou 'codePostal'"], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $batiments = $this->em->getRepository(Batiment::class)->findBatimentByFiltres($libelle, $ville, $codePostal);
+        } catch (Exception) {
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return new JsonResponse($this->serializer->serialize($batiments, 'json', ['groups' => 'batiment']), Response::HTTP_OK);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/batiments/{batimentId}",
+     *     tags={"Batiments"},
+     *     summary="Récupère un bâtiment par son ID",
+     *     @OA\Parameter(
+     *          name="batimentId",
+     *          @OA\Schema(type="integer"),
+     *          in="path",
+     *          required=true,
+     *          description="ID du bâtiment"
+     *      ),
+     *     @OA\Response(
+     *           response=200,
+     *           description="Le bâtiment est retourné",
+     *           @OA\JsonContent(
+     *               type="array",
+     *               @OA\Items(ref=@Model(type=Batiment::class, groups={"batiment"}))
+     *           )
+     *      ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Le bâtiment n'a pas été trouvé"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur technique"
+     *     )
+     * )
+     *
+     * @Rest\Get("/api/batiments/{batimentId}")
+     * @Security(name="Bearer")
+     */
+    public function getBatimentParId(int $batimentId): JsonResponse
+    {
+        try {
+            $batiment = $this->em->getRepository(Batiment::class)->find($batimentId);
+
+            if (!$batiment) {
+                return new JsonResponse(['message' => 'Bâtiment non trouvé'], Response::HTTP_NOT_FOUND);
+            }
+        } catch (Exception) {
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return new JsonResponse($this->serializer->serialize($batiment, 'json', ['groups' => 'batiment']), Response::HTTP_OK);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/batiments",
+     *     tags={"Batiments"},
+     *     summary="Créer un nouvel batiment",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Données du batiment à créer",
+     *         @OA\JsonContent(ref=@Model(type=Batiment::class, groups={"nelmio"}))
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Batiment créé avec succès",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(ref=@Model(type=Batiment::class, groups={"batiment"}))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Données invalides"
+     *     ),
+     *     @OA\Response(
+     *          response=404,
+     *          description="Établissement non trouvé"
+     *      ),
+     *     @OA\Response(
+     *          response=500,
+     *          description="Erreur technique"
+     *      )
+     * )
+     *
+     * @Rest\Post("/api/batiments")
+     * @Security(name="Bearer")
+     */
+    public function postBatiment(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        $batiment = new Batiment();
-        $batiment->setLibelle($data['libelle']);
-        $batiment->setNumVoie($data['numVoie']);
-        $batiment->setRue($data['rue']);
-        $batiment->setVille($data['ville']);
-        $batiment->setCodePostal($data['codePostal']);
-        $batiment->setNumeroTel($data['numeroTel']);
 
-       
-        $etablissementId = $data['etablissementId'];
-        $etablissement = $entityManager->getRepository(Etablissement::class)->find($etablissementId);
-        $batiment->setEtablissement($etablissement);
-
-        $entityManager = $this->getDoctrine()->getManager();
-        $entityManager->persist($batiment);
-        $entityManager->flush();
-
-        
-        $batimentData = $batiment->toArray();
-
-        return new JsonResponse(['message' => 'Bâtiment créé avec succès', 'batiment' => $batimentData], JsonResponse::HTTP_CREATED);
-    }
-    /**
-     * @Route("/", methods={"GET"})
-     *
-     * @SWG\Tag(name="Batiment")
-     * @SWG\Response(
-     *     response=200,
-     *     description="Liste de tous les bâtiments",
-     *     @SWG\Schema(
-     *         type="array",
-     *         @SWG\Items(ref=@Model(type=Batiment::class))
-     *     )
-     * )
-     * @Security("is_granted('ROLE_RESPONSABLE_PLANNING')")
-     * @NelmioSecurity(name="Bearer")
-     */
-    public function listBatiments(): JsonResponse
-    {
-        $entityManager = $this->getDoctrine()->getManager();
-        $batimentRepository = $entityManager->getRepository(Batiment::class);
-        $batiments = $batimentRepository->findAll();
-
-        $batimentsData = [];
-
-        foreach ($batiments as $batiment) {
-            $batimentsData[] = $batiment->toArray(); // Assurez-vous d'avoir la méthode toArray() dans votre entité Batiment
+        if (!$this->serviceBatiment->isDataValide($data)) {
+            return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
         }
 
-        return new JsonResponse($batimentsData, JsonResponse::HTTP_OK);
-    }
-    /**
-     * @Route("/{id}", methods={"GET"})
-     *
-     * @SWG\Tag(name="Batiment")
-     * @SWG\Parameter(
-     *     name="id",
-     *     in="path",
-     *     type="integer",
-     *     description="ID du bâtiment à afficher"
-     * )
-     * @SWG\Response(
-     *     response=200,
-     *     description="Détails du bâtiment",
-     *     @SWG\Schema(
-     *         type="object",
-     *         @SWG\Property(property="nom", type="string", description="Nom du bâtiment"),
-     *         @SWG\Property(property="adresse", type="string", description="Adresse du bâtiment"),
-     *     )
-     * )
-     * @SWG\Response(
-     *     response=404,
-     *     description="Bâtiment non trouvé",
-     *     @SWG\Schema(
-     *         type="object",
-     *         @SWG\Property(property="message", type="string", description="Message d'erreur")
-     *     )
-     * )
-     * @Security("is_granted('ROLE_RESPONSABLE_PLANNING')")
-     * @NelmioSecurity(name="Bearer")
-     */
-    public function getBatiment(int $id): JsonResponse
-    {
+        $batiment = (new Batiment())
+            ->setLibelle($data['libelle'])
+            ->setNumVoie($data['numVoie'])
+            ->setRue($data['rue'])
+            ->setVille($data['ville'])
+            ->setCodePostal($data['codePostal'])
+            ->setNumeroTel($data['numeroTel'])
+        ;
 
-        $entityManager = $this->getDoctrine()->getManager();
-        $batimentRepository = $entityManager->getRepository(Batiment::class);
-        $batiment = $batimentRepository->find($id);
+        try {
+            $etablissement = $this->em->getRepository(Etablissement::class)->find($data['etablissementId']);
+            if (!$etablissement) {
+                return new JsonResponse(['message' => 'Établissement non trouvé'], Response::HTTP_NOT_FOUND);
+            }
 
-
-        if (!$batiment) {
-            return new JsonResponse(['message' => 'Bâtiment non trouvé'], JsonResponse::HTTP_NOT_FOUND);
+            $batiment->setEtablissement($etablissement);
+            $this->em->persist($batiment);
+            $this->em->flush();
+        } catch (Exception) {
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-
-        $batimentData = $batiment->toArray(); 
-
-
-        return new JsonResponse($batimentData, JsonResponse::HTTP_OK);
+        $batimentSerealize = $this->serializer->serialize($batiment, 'json', ['groups' => 'batiment']);
+        return new JsonResponse(['message' => 'Bâtiment créé avec succès', 'batiment' => $batimentSerealize], Response::HTTP_CREATED);
     }
+
     /**
-     * @Route("/{id}", methods={"PUT"})
+     * @OA\Put(
+     *     path="/api/batiments/{batimentId}",
+     *     tags={"Batiments"},
+     *     summary="Mettre à jour les détails d'un batiment par ID",
+     *     @OA\Parameter(
+     *         name="batimentId",
+     *         @OA\Schema(type="integer"),
+     *         in="path",
+     *         required=true,
+     *         description="ID du batiment"
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Données du batiment à mettre à jour",
+     *         @OA\JsonContent(ref=@Model(type=Batiment::class, groups={"nelmio"}))
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Batiment mis à jour avec succès",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(ref=@Model(type=Batiment::class, groups={"batiment"}))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Données invalides"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Batiment non trouvé"
+     *     ),
+     *     @OA\Response(
+     *          response=500,
+     *          description="Erreur technique"
+     *      )
+     * )
      *
-     * @SWG\Tag(name="Batiment")
-     * @SWG\Parameter(
-     *     name="id",
-     *     in="path",
-     *     type="integer",
-     *     description="ID du bâtiment à mettre à jour"
-     * )
-     * @SWG\Parameter(
-     *     name="body",
-     *     in="body",
-     *     required=true,
-     *     description="Nouvelles données du bâtiment",
-     *     @SWG\Schema(
-     *         type="object",
-     *         @SWG\Property(property="nom", type="string", description="Nouveau nom du bâtiment"),
-     *         @SWG\Property(property="adresse", type="string", description="Nouvelle adresse du bâtiment"),
-     *     )
-     * )
-     * @SWG\Response(
-     *     response=200,
-     *     description="Bâtiment mis à jour avec succès",
-     *     @SWG\Schema(
-     *         type="object",
-     *         @SWG\Property(property="message", type="string", description="Message de confirmation"),
-     *     )
-     * )
-     * @SWG\Response(
-     *     response=404,
-     *     description="Bâtiment non trouvé",
-     *     @SWG\Schema(
-     *         type="object",
-     *         @SWG\Property(property="message", type="string", description="Message d'erreur")
-     *     )
-     * )
-     * @Security("is_granted('ROLE_RESPONSABLE_PLANNING')")
-     * @NelmioSecurity(name="Bearer")
+     * @Rest\Put("/api/batiments/{batimentId}")
+     * @Security(name="Bearer")
      */
-    public function updateBatiment(int $id, Request $request, BatimentRepository $batimentRepository): JsonResponse
+    public function putBatiment(int $batimentId, Request $request): JsonResponse
     {
-        $entityManager = $this->getDoctrine()->getManager();
-        $batiment = $batimentRepository->find($id);
-
-        if (!$batiment) {
-            return new JsonResponse(['message' => 'Bâtiment non trouvé'], JsonResponse::HTTP_NOT_FOUND);
-        }
-
         $data = json_decode($request->getContent(), true);
 
-        // Mettre à jour les propriétés du bâtiment avec les nouvelles données
-        if (isset($data['libelle'])) {
-            $batiment->setLibelle($data['libelle']);
-        }
-        if (isset($data['numVoie'])) {
-            $batiment->setNumVoie($data['numVoie']);
-        }
-        if (isset($data['rue'])) {
-            $batiment->setRue($data['rue']);
-        }
-        if (isset($data['ville'])) {
-            $batiment->setVille($data['ville']);
-        }
-        if (isset($data['codePostal'])) {
-            $batiment->setCodePostal($data['codePostal']);
-        }
-        if (isset($data['numeroTel'])) {
-            $batiment->setNumeroTel($data['numeroTel']);
+        try {
+            if (!$this->serviceBatiment->isDataValide($data)) {
+                return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $batiment = $this->em->getRepository(Batiment::class)->find($batimentId);
+
+            if (!$batiment) {
+                return new JsonResponse(['message' => 'Bâtiment non trouvé'], Response::HTTP_NOT_FOUND);
+            }
+
+            $batiment
+                ->setLibelle($data['libelle'])
+                ->setNumVoie($data['numVoie'])
+                ->setRue($data['rue'])
+                ->setVille($data['ville'])
+                ->setCodePostal($data['codePostal'])
+                ->setNumeroTel($data['numeroTel'])
+            ;
+        } catch (Exception) {
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        $entityManager->flush();
+        $this->em->flush();
 
-        return new JsonResponse(['message' => 'Bâtiment mis à jour avec succès'], JsonResponse::HTTP_OK);
+        $batimentSerealize = $this->serializer->serialize($batiment, 'json', ['groups' => 'batiment']);
+        return new JsonResponse(['message' => 'Bâtiment mis à jour avec succès', 'batiment' => $batimentSerealize], Response::HTTP_OK);
     }
+
     /**
-     * @Route("/{id}", methods={"DELETE"})
-     *
-     * @SWG\Tag(name="Batiment")
-     * @SWG\Parameter(
-     *     name="id",
-     *     in="path",
-     *     type="integer",
-     *     description="ID du bâtiment à supprimer"
+     * @OA\Delete(
+     *     path="/api/batiments/{batimentId}",
+     *     tags={"Batiments"},
+     *     summary="Supprimer un batiment par ID",
+     *     @OA\Parameter(
+     *         name="batimentId",
+     *         @OA\Schema(type="integer"),
+     *         in="path",
+     *         required=true,
+     *         description="ID du batiment à supprimer"
+     *     ),
+     *     @OA\Response(
+     *         response=204,
+     *         description="Batiment supprimé avec succès"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Batiment non trouvé"
+     *     ),
+     *     @OA\Response(
+     *          response=500,
+     *          description="Erreur technique"
+     *      )
      * )
-     * @SWG\Response(
-     *     response=200,
-     *     description="Bâtiment supprimé avec succès",
-     *     @SWG\Schema(
-     *         type="object",
-     *         @SWG\Property(property="message", type="string", description="Message de confirmation"),
-     *     )
-     * )
-     * @SWG\Response(
-     *     response=404,
-     *     description="Bâtiment non trouvé",
-     *     @SWG\Schema(
-     *         type="object",
-     *         @SWG\Property(property="message", type="string", description="Message d'erreur")
-     *     )
-     * )
-     * @Security("is_granted('ROLE_RESPONSABLE_PLANNING')")
-     * @NelmioSecurity(name="Bearer")
+     * @Rest\Delete("/api/batiments/{batimentId}")
+     * @Security(name="Bearer")
      */
-    public function deleteBatiment(int $id, BatimentRepository $batimentRepository): JsonResponse
+    public function deleteBatiment(int $batimentId): JsonResponse
     {
-        $entityManager = $this->getDoctrine()->getManager();
-        $batiment = $batimentRepository->find($id);
+        $batiment = $this->em->getRepository(Batiment::class)->find($batimentId);
 
         if (!$batiment) {
-            return new JsonResponse(['message' => 'Bâtiment non trouvé'], JsonResponse::HTTP_NOT_FOUND);
+            return new JsonResponse(['message' => 'Batiment non trouvé'], Response::HTTP_NOT_FOUND);
         }
 
-        $entityManager->remove($batiment);
-        $entityManager->flush();
-
-        return new JsonResponse(['message' => 'Bâtiment supprimé avec succès'], JsonResponse::HTTP_OK);
-    }
-    /**
-     * @Route("/{batimentId}/affecter-salle", methods={"POST"})
-     *
-     * @SWG\Tag(name="Batiment")
-     * @SWG\Parameter(
-     *     name="batimentId",
-     *     in="path",
-     *     type="integer",
-     *     description="ID du bâtiment auquel affecter une salle"
-     * )
-     * @SWG\Parameter(
-     *     name="body",
-     *     in="body",
-     *     required=true,
-     *     description="ID de la salle à affecter au bâtiment",
-     *     @SWG\Schema(
-     *         type="object",
-     *         @SWG\Property(property="salleId", type="integer", description="ID de la salle à affecter"),
-     *     )
-     * )
-     * @SWG\Response(
-     *     response=200,
-     *     description="Salle affectée au bâtiment avec succès",
-     *     @SWG\Schema(
-     *         type="object",
-     *         @SWG\Property(property="message", type="string", description="Message de confirmation"),
-     *     )
-     * )
-     * @SWG\Response(
-     *     response=404,
-     *     description="Bâtiment ou salle non trouvé(s)",
-     *     @SWG\Schema(
-     *         type="object",
-     *         @SWG\Property(property="message", type="string", description="Message d'erreur")
-     *     )
-     * )
-     * @Security("is_granted('ROLE_RESPONSABLE_PLANNING')")
-     * @NelmioSecurity(name="Bearer")
-     */
-    public function affecterSalleABatiment(int $batimentId, Request $request, BatimentRepository $batimentRepository, SalleRepository $salleRepository): JsonResponse
-    {
-        $entityManager = $this->getDoctrine()->getManager();
-        $batiment = $batimentRepository->find($batimentId);
-
-        if (!$batiment) {
-            return new JsonResponse(['message' => 'Bâtiment non trouvé'], JsonResponse::HTTP_NOT_FOUND);
+        try {
+            $this->em->remove($batiment);
+            $this->em->flush();
+        } catch (Exception) {
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        $data = json_decode($request->getContent(), true);
-        $salleId = $data['salleId'];
-
-        $salle = $salleRepository->find($salleId);
-
-        if (!$salle) {
-            return new JsonResponse(['message' => 'Salle non trouvée'], JsonResponse::HTTP_NOT_FOUND);
-        }
-
-        $batiment->addSalle($salle);
-        $entityManager->flush();
-
-        return new JsonResponse(['message' => 'Salle affectée au bâtiment avec succès'], JsonResponse::HTTP_OK);
-    }
-    /**
-     * @Route("/{batimentId}/desaffecter-salle", methods={"POST"})
-     *
-     * @SWG\Tag(name="Batiment")
-     * @SWG\Parameter(
-     *     name="batimentId",
-     *     in="path",
-     *     type="integer",
-     *     description="ID du bâtiment auquel désaffecter une salle"
-     * )
-     * @SWG\Parameter(
-     *     name="body",
-     *     in="body",
-     *     required=true,
-     *     description="ID de la salle à désaffecter du bâtiment",
-     *     @SWG\Schema(
-     *         type="object",
-     *         @SWG\Property(property="salleId", type="integer", description="ID de la salle à désaffecter"),
-     *     )
-     * )
-     * @SWG\Response(
-     *     response=200,
-     *     description="Salle désaffectée du bâtiment avec succès",
-     *     @SWG\Schema(
-     *         type="object",
-     *         @SWG\Property(property="message", type="string", description="Message de confirmation"),
-     *     )
-     * )
-     * @SWG\Response(
-     *     response=404,
-     *     description="Bâtiment ou salle non trouvé(s)",
-     *     @SWG\Schema(
-     *         type="object",
-     *         @SWG\Property(property="message", type="string", description="Message d'erreur")
-     *     )
-     * )
-     * @Security("is_granted('ROLE_RESPONSABLE_PLANNING')")
-     * @NelmioSecurity(name="Bearer")
-     */
-    public function desaffecterSalleDeBatiment(int $batimentId, Request $request, BatimentRepository $batimentRepository, SalleRepository $salleRepository): JsonResponse
-    {
-        $entityManager = $this->getDoctrine()->getManager();
-        $batiment = $batimentRepository->find($batimentId);
-
-        if (!$batiment) {
-            return new JsonResponse(['message' => 'Bâtiment non trouvé'], JsonResponse::HTTP_NOT_FOUND);
-        }
-
-        $data = json_decode($request->getContent(), true);
-        $salleId = $data['salleId'];
-
-        $salle = $salleRepository->find($salleId);
-
-        if (!$salle) {
-            return new JsonResponse(['message' => 'Salle non trouvée'], JsonResponse::HTTP_NOT_FOUND);
-        }
-
-        $batiment->removeSalle($salle);
-        $entityManager->flush();
-
-        return new JsonResponse(['message' => 'Salle désaffectée du bâtiment avec succès'], JsonResponse::HTTP_OK);
-    }
-    /**
-     * @Route("/{id}/salles", methods={"GET"})
-     *
-     * @SWG\Tag(name="Batiment")
-     * @SWG\Parameter(
-     *     name="id",
-     *     in="path",
-     *     type="integer",
-     *     description="ID du bâtiment"
-     * )
-     * @SWG\Response(
-     *     response=200,
-     *     description="Liste des salles du bâtiment",
-     *     @SWG\Schema(
-     *         type="array",
-     *         @SWG\Items(ref=@Model(type=Salle::class, groups={"full"}))
-     *     )
-     * )
-     * @SWG\Response(
-     *     response=404,
-     *     description="Bâtiment non trouvé",
-     *     @SWG\Schema(
-     *         type="object",
-     *         @SWG\Property(property="message", type="string", description="Message d'erreur")
-     *     )
-     * )
-     * @Security("is_granted('ROLE_RESPONSABLE_PLANNING')")
-     * @NelmioSecurity(name="Bearer")
-     */
-    public function getSallesByBatiment(int $id, BatimentRepository $batimentRepository): JsonResponse
-    {
-        $batiment = $batimentRepository->find($id);
-
-        if (!$batiment) {
-            return new JsonResponse(['message' => 'Bâtiment non trouvé'], JsonResponse::HTTP_NOT_FOUND);
-        }
-
-        $salles = $batiment->getSalles();
-
-
-        return $this->json($salles, JsonResponse::HTTP_OK, [], ['groups' => ['full']]);
-    }
-    /**
-     * @Route("/search", methods={"GET"})
-     *
-     * @SWG\Tag(name="Batiment")
-     * @SWG\Parameter(
-     *     name="nom",
-     *     in="query",
-     *     type="string",
-     *     description="Nom du bâtiment à rechercher"
-     * )
-     * @SWG\Response(
-     *     response=200,
-     *     description="Liste des bâtiments correspondants à la recherche",
-     *     @SWG\Schema(
-     *         type="array",
-     *         @SWG\Items(ref=@Model(type=Batiment::class, groups={"light"}))
-     *     )
-     * )
-     * @SWG\Response(
-     *     response=400,
-     *     description="Paramètre 'nom' manquant"
-     * )
-     * @Security("is_granted('ROLE_RESPONSABLE_PLANNING')")
-     * @NelmioSecurity(name="Bearer")
-     */
-    public function searchBatiments(Request $request, BatimentRepository $batimentRepository): JsonResponse
-    {
-        $nom = $request->query->get('nom');
-
-        if (!$nom) {
-            return new JsonResponse(['message' => 'Paramètre \'nom\' manquant'], JsonResponse::HTTP_BAD_REQUEST);
-        }
-
-        $resultats = $batimentRepository->searchByNom($nom);
-
-        return $this->json($resultats, JsonResponse::HTTP_OK, [], ['groups' => ['light']]);
-    }
-    /**
-     * @Route("/{id}/salles/disponibilites", methods={"GET"})
-     *
-     * @SWG\Tag(name="Batiment")
-     * @SWG\Parameter(
-     *     name="id",
-     *     in="path",
-     *     type="integer",
-     *     description="ID du bâtiment"
-     * )
-     * @SWG\Response(
-     *     response=200,
-     *     description="Liste des salles du bâtiment avec leurs disponibilités",
-     *     @SWG\Schema(
-     *         type="array",
-     *         @SWG\Items(ref=@Model(type=SalleAvecDisponibilite::class, groups={"full"}))
-     *     )
-     * )
-     * @SWG\Response(
-     *     response=404,
-     *     description="Bâtiment non trouvé",
-     *     @SWG\Schema(
-     *         type="object",
-     *         @SWG\Property(property="message", type="string", description="Message d'erreur")
-     *     )
-     * )
-     * @Security("is_granted('ROLE_RESPONSABLE_PLANNING')")
-     * @NelmioSecurity(name="Bearer")
-     */
-    public function getSallesWithDisponibilitesByBatiment(int $id, BatimentRepository $batimentRepository): JsonResponse
-    {
-
-        $batiment = $batimentRepository->find($id);
-
-        if (!$batiment) {
-            return new JsonResponse(['message' => 'Bâtiment non trouvé'], JsonResponse::HTTP_NOT_FOUND);
-        }
-
-        $sallesAvecDisponibilites = $batiment->getSallesWithDisponibilites();
-
-        return $this->json($sallesAvecDisponibilites, JsonResponse::HTTP_OK, [], ['groups' => ['full']]);
-    }
-    /**
-     * @Route("/{id}/cours", methods={"GET"})
-     *
-     * @SWG\Tag(name="Batiment")
-     * @SWG\Parameter(
-     *     name="id",
-     *     in="path",
-     *     type="integer",
-     *     description="ID du bâtiment"
-     * )
-     * @SWG\Response(
-     *     response=200,
-     *     description="Liste des cours planifiés dans le bâtiment",
-     *     @SWG\Schema(
-     *         type="array",
-     *         @SWG\Items(ref=@Model(type=Cours::class, groups={"full"}))
-     *     )
-     * )
-     * @SWG\Response(
-     *     response=404,
-     *     description="Bâtiment non trouvé",
-     *     @SWG\Schema(
-     *         type="object",
-     *         @SWG\Property(property="message", type="string", description="Message d'erreur")
-     *     )
-     * )
-     * @Security("is_granted('ROLE_RESPONSABLE_PLANNING')")
-     * @NelmioSecurity(name="Bearer")
-     */
-    public function getCoursByBatiment(int $id, BatimentRepository $batimentRepository): JsonResponse
-    {
-
-        $batiment = $batimentRepository->find($id);
-
-
-        if (!$batiment) {
-            return new JsonResponse(['message' => 'Bâtiment non trouvé'], JsonResponse::HTTP_NOT_FOUND);
-        }
-
- 
-        $cours = $batiment->getCours();
-
-
-        return $this->json($cours, JsonResponse::HTTP_OK, [], ['groups' => ['full']]);
-    }
-    /**
-     * @Route("/{id}/salles", methods={"POST"})
-     *
-     * @SWG\Tag(name="Batiment")
-     * @SWG\Parameter(
-     *     name="id",
-     *     in="path",
-     *     type="integer",
-     *     description="ID du bâtiment"
-     * )
-     * @SWG\Parameter(
-     *     name="body",
-     *     in="body",
-     *     required=true,
-     *     description="Données de la salle à créer",
-     *     @SWG\Schema(
-     *         type="object",
-     *         @SWG\Property(property="nom", type="string", description="Nom de la salle"),
-     *         @SWG\Property(property="capacite", type="integer", description="Capacité de la salle")
-     *     )
-     * )
-     * @SWG\Response(
-     *     response=201,
-     *     description="Salle créée avec succès",
-     *     @SWG\Schema(
-     *         type="object",
-     *         @SWG\Property(property="message", type="string", description="Message de confirmation"),
-     *         @SWG\Property(property="salle", ref=@Model(type=Salle::class, groups={"light"}))
-     *     )
-     * )
-     * @SWG\Response(
-     *     response=404,
-     *     description="Bâtiment non trouvé",
-     *     @SWG\Schema(
-     *         type="object",
-     *         @SWG\Property(property="message", type="string", description="Message d'erreur")
-     *     )
-     * )
-     * @SWG\Response(
-     *     response=400,
-     *     description="Données de la salle non valides",
-     *     @SWG\Schema(
-     *         type="object",
-     *         @SWG\Property(property="message", type="string", description="Message d'erreur")
-     *     )
-     * )
-     * @Security("is_granted('ROLE_RESPONSABLE_PLANNING')")
-     * @NelmioSecurity(name="Bearer")
-     */
-    public function createSalleInBatiment(int $id, Request $request, BatimentRepository $batimentRepository): JsonResponse
-    {
-
-        $batiment = $batimentRepository->find($id);
-
-    
-        if (!$batiment) {
-            return new JsonResponse(['message' => 'Bâtiment non trouvé'], JsonResponse::HTTP_NOT_FOUND);
-        }
-
-  
-        $data = json_decode($request->getContent(), true);
-
-        $salle = new Salle();
-    
-
-        $salle->setBatiment($batiment);
-        
-        $entityManager = $this->getDoctrine()->getManager();
-        $entityManager->persist($salle);
-        $entityManager->flush();
-
-        return $this->json(['message' => 'Salle créée avec succès', 'salle' => $salle], JsonResponse::HTTP_CREATED, [], ['groups' => ['light']]);
+        return new JsonResponse(['message' => 'Batiment supprimé avec succès'], Response::HTTP_NO_CONTENT);
     }
 }

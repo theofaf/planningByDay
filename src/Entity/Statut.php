@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\StatutRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: StatutRepository::class)]
 class Statut
@@ -31,12 +32,15 @@ class Statut
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["nelmio", "statut", "ticket", "message"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 15)]
+    #[Groups(["nelmio", "statut"])]
     private ?string $libelle = null;
 
     #[ORM\Column(length: 15)]
+    #[Groups(["nelmio", "statut"])]
     private ?string $libelleTechnique = null;
 
     public function getId(): ?int

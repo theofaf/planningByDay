@@ -6,6 +6,7 @@ use App\Repository\MessageRepository;
 use DateTimeInterface;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: MessageRepository::class)]
 class Message
@@ -13,17 +14,21 @@ class Message
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["nelmio", "message", "utilisateur"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(["nelmio", "message"])]
     private ?string $contenu = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(["nelmio", "message"])]
     private ?Statut $statut = null;
 
     #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'messagesRecues')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(["nelmio", "message"])]
     private ?Utilisateur $receveur = null;
 
     #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'messagesEnvoyees')]
