@@ -38,7 +38,7 @@ class Statut
     private ?int $id = null;
 
     #[ORM\Column(length: 15)]
-    #[Groups(["nelmio", "statut"])]
+    #[Groups(["nelmio", "statut", "ticket"])]
     private ?string $libelle = null;
 
     #[ORM\Column(length: 15)]
