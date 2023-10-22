@@ -22,6 +22,9 @@ class Statut
     public const STATUT_VALIDE_FRANCISE = 'validé';
 
     public const STATUT_PUBLIE_ID = 2;
+    public const STATUT_ANNULE_ID = 4;
+    public const STATUT_VALIDE_ID = 5;
+    public const STATUT_ATTENTE_ID = 6;
 
     public const LISTE_STATUT_MESSAGE = [
       self::STATUT_BROUILLON_TECHNIQUE => self::STATUT_BROUILLON_FRANCISE,
@@ -34,11 +37,11 @@ class Statut
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["nelmio", "statut", "ticket", "message"])]
+    #[Groups(["nelmio", "statut", "ticket", "message", "session"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 15)]
-    #[Groups(["nelmio", "statut", "ticket"])]
+    #[Groups(["nelmio", "statut", "ticket", "session"])]
     private ?string $libelle = null;
 
     #[ORM\Column(length: 15)]

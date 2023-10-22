@@ -2,6 +2,9 @@
 
 namespace App\Controller;
 
+use FOS\RestBundle\Controller\Annotations as Rest;
+use Nelmio\ApiDocBundle\Annotation\Security;
+use OpenApi\Annotations as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -10,7 +13,35 @@ use Symfony\Component\Security\Core\Exception\AuthenticationException;
 
 class TokenController extends AbstractController
 {
-    #[Route('/api/token/validate', name: 'validate_token', methods: "POST")]
+    /**
+     * @OA\Post(
+     *     path="/api/validate/token",
+     *     tags={"Authentification"},
+     *     summary="Valider un token d'authentification Bearer",
+     *     @OA\Parameter(
+     *          name="Authorization",
+     *          in="header",
+     *          required=true,
+     *          description="Le token d'authentification Bearer",
+     *          @OA\Schema(type="string")
+     *      ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Token valide",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="valid", type="boolean")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Token Bearer non fourni ou invalide"
+     *     )
+     * )
+     *
+     * @Rest\Post("/api/validate/token")
+     * @Security(name="Bearer")
+     */
     public function validateToken(Request $request): JsonResponse
     {
         $authorizationHeader = $request->headers->get('Authorization');

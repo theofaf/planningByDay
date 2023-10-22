@@ -19,7 +19,7 @@ class ModuleFormation
     private ?int $id = null;
 
     #[ORM\Column(length: 30)]
-    #[Groups(["nelmio", "moduleFormation", "ModuleFormationUtilisateur"])]
+    #[Groups(["nelmio", "moduleFormation", "ModuleFormationUtilisateur", "session"])]
     private ?string $libelle = null;
 
     #[ORM\Column(type: Types::TIME_MUTABLE)]

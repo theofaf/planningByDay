@@ -20,4 +20,19 @@ class SessionRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Session::class);
     }
+
+    public function getSessionsParEtablissementId(int $etablissementId)
+    {
+        $qb = $this->createQueryBuilder('s');
+
+        $qb
+            ->join('s.salle', 'salle')
+            ->join('salle.batiment', 'bat')
+            ->join('bat.etablissement', 'e')
+            ->andWhere($qb->expr()->eq('e.id', ':etablissementId'))
+            ->setParameter('etablissementId', $etablissementId)
+        ;
+
+        return $qb->getQuery()->getResult();
+    }
 }

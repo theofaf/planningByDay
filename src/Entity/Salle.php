@@ -13,11 +13,11 @@ class Salle
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["nelmio", "salle", "batiment"])]
+    #[Groups(["nelmio", "salle", "batiment", "session"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 30)]
-    #[Groups(["nelmio", "salle"])]
+    #[Groups(["nelmio", "salle", "session"])]
     private ?string $libelle = null;
 
     #[ORM\Column]

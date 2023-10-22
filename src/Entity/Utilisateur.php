@@ -17,7 +17,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["nelmio", "utilisateur", "etablissement", "ticket", "message", "ModuleFormationUtilisateur"])]
+    #[Groups(["nelmio", "utilisateur", "etablissement", "ticket", "message", "ModuleFormationUtilisateur", "session"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
@@ -25,11 +25,11 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $email = null;
 
     #[ORM\Column(length: 50)]
-    #[Groups(["nelmio", "utilisateur", "ModuleFormationUtilisateur"])]
+    #[Groups(["nelmio", "utilisateur", "ModuleFormationUtilisateur", "session"])]
     private ?string $nom = null;
 
     #[ORM\Column(length: 50)]
-    #[Groups(["nelmio", "utilisateur", "ModuleFormationUtilisateur"])]
+    #[Groups(["nelmio", "utilisateur", "ModuleFormationUtilisateur", "session"])]
     private ?string $prenom = null;
 
     #[ORM\Column]

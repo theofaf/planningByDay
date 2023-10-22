@@ -19,7 +19,7 @@ class Etablissement
     private ?int $id = null;
 
     #[ORM\Column(length: 30)]
-    #[Groups(["nelmio", "etablissement"])]
+    #[Groups(["nelmio", "etablissement", "utilisateur"])]
     private ?string $libelle = null;
 
     #[ORM\Column]
