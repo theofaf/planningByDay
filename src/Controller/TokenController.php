@@ -10,9 +10,15 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class TokenController extends AbstractController
 {
+    public function __construct(
+        private readonly SerializerInterface  $serializer,
+    ) {
+    }
+
     /**
      * @OA\Post(
      *     path="/api/validate/token",
@@ -55,6 +61,9 @@ class TokenController extends AbstractController
             throw new AuthenticationException('Bearer Token not provided.');
         }
 
-        return new JsonResponse(['valid' => true]);
+        return new JsonResponse([
+            'valid' => true,
+            'user' => $this->serializer->serialize($this->getUser(), 'json', ['groups' => 'utilisateur']),
+        ]);
     }
 }
