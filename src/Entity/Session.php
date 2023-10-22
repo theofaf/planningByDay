@@ -50,7 +50,7 @@ class Session
     #[Groups(["nelmio", "session"])]
     private ?Statut $statut = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     #[Groups(["nelmio", "message"])]
     private ?bool $estAcceptee = null;
 

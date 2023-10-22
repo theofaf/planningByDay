@@ -6,9 +6,11 @@ use App\Entity\Classe;
 use App\Entity\Cursus;
 use App\Entity\ModuleFormation;
 use App\Entity\Session;
+use App\Entity\Statut;
 use App\Entity\Utilisateur;
 use App\Repository\BatimentRepository;
 use App\Repository\SalleRepository;
+use App\Repository\StatutRepository;
 use DateInterval;
 use DateTime;
 use Doctrine\Bundle\FixturesBundle\Fixture;
@@ -25,6 +27,7 @@ class SessionFixtures extends Fixture implements DependentFixtureInterface
     public function __construct(
         private readonly SalleRepository $salleRepository,
         private readonly BatimentRepository $batimentRepository,
+        private readonly StatutRepository $statutRepository,
     ) {
         $this->faker = Factory::create('fr_FR');
     }
@@ -68,6 +71,7 @@ class SessionFixtures extends Fixture implements DependentFixtureInterface
                 $salle = $salles[0];
 
                 list($dateDebut, $dateFin) = $this->creerDatesSession();
+                $statutAttente = $this->statutRepository->find(Statut::STATUT_ATTENTE_ID);
                 $session = (new Session())
                     ->setUtilisateur($formateur)
                     ->setModuleFormation($module)
@@ -75,6 +79,7 @@ class SessionFixtures extends Fixture implements DependentFixtureInterface
                     ->setDateFin($dateFin)
                     ->setClasse($classe)
                     ->setSalle($salle)
+                    ->setStatut($statutAttente)
                 ;
                 $manager->persist($session);
             }

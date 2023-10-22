@@ -20,7 +20,7 @@ final class Version20231022182641 extends AbstractMigration
     public function up(Schema $schema): void
     {
         $this->addSql("INSERT INTO statut VALUES (6, 'en attente', 'en_attente')");
-        $this->addSql('ALTER TABLE session ADD statut_id INT NOT NULL DEFAULT 1');
+        $this->addSql('ALTER TABLE session ADD statut_id INT NOT NULL');
         $this->addSql('ALTER TABLE session ADD CONSTRAINT FK_D044D5D4F6203804 FOREIGN KEY (statut_id) REFERENCES statut (id)');
         $this->addSql('CREATE INDEX IDX_D044D5D4F6203804 ON session (statut_id)');
     }
