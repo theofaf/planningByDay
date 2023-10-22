@@ -371,15 +371,15 @@ class UtilisateurController extends AbstractController
      *           description="ID du utilisateur"
      *       ),
      *     @OA\Parameter(
-     *            name="ancienMdp",
-     *            @OA\Schema(type="integer"),
+     *            name="password",
+     *            @OA\Schema(type="string"),
      *            in="query",
      *            required=true,
      *            description="ancien mot de passe de l'utilisateur"
      *        ),
      *     @OA\Parameter(
-     *            name="nouveauMdp",
-     *            @OA\Schema(type="integer"),
+     *            name="passwordNew",
+     *            @OA\Schema(type="string"),
      *            in="query",
      *            required=true,
      *            description="nouveau mot de passe de l'utilisateur"
@@ -420,11 +420,12 @@ class UtilisateurController extends AbstractController
 
             $ancienMdp = $request->query?->get('password');
             $nouveauMdp = $request->query?->get('passwordNew');
-            $ancienMdpHash = $this->passwordHasher->hashPassword($utilisateur, $ancienMdp);
+            $isValid = $this->passwordHasher->isPasswordValid($utilisateur, $ancienMdp);
+            var_dump($isValid);
 
             if (
                 null === $ancienMdp || null == $nouveauMdp
-                || $ancienMdpHash !== $utilisateur->getPassword()
+                || !$isValid
             ) {
                 return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
             }
@@ -435,7 +436,7 @@ class UtilisateurController extends AbstractController
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new JsonResponse(['message' => 'Utilisateur supprimé avec succès'], Response::HTTP_NO_CONTENT);
+        return new JsonResponse(['message' => 'Mot de passe modifié avec succès'], Response::HTTP_OK);
     }
     
 }
