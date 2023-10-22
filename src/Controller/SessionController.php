@@ -68,6 +68,96 @@ class SessionController extends AbstractController
 
     /**
      * @OA\Get(
+     *     path="/api/sessions/filtres",
+     *     tags={"Sessions"},
+     *     summary="Récupère les sessions selon les ID d'un établissement, d'une classe et d'un utilisateur",
+     *     @OA\Parameter(
+     *          name="etablissementId",
+     *          @OA\Schema(type="integer"),
+     *          in="query",
+     *          required=false,
+     *          description="ID de l'établissement"
+     *      ),
+     *     @OA\Parameter(
+     *           name="classeId",
+     *           @OA\Schema(type="integer"),
+     *           in="query",
+     *           required=false,
+     *           description="ID de la classe"
+     *       ),
+     *     @OA\Parameter(
+     *           name="utilisateurId",
+     *           @OA\Schema(type="integer"),
+     *           in="query",
+     *           required=false,
+     *           description="ID de l'utilisateur"
+     *       ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Les sessions filtrées sont retournées",
+     *          @OA\JsonContent(
+     *              type="array",
+     *              @OA\Items(ref=@Model(type=Session::class, groups={"session"}))
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response=404,
+     *          description="L'établissement ou la classe ou l'établissement n'a pas été trouvé"
+     *      ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur technique"
+     *     )
+     * )
+     *
+     * @Rest\Get("/api/sessions/filtres")
+     * @Security(name="Bearer")
+     */
+    public function getSessionsFiltrees(Request $request): JsonResponse
+    {
+        $utilisateurId = $request->query?->get('utilisateurId');
+        $classeId = $request->query?->get('classeId');
+        $etablissementId = $request->query?->get('etablissementId');
+        $utilisateur = null;
+        $classe = null;
+        $etablissement = null;
+
+        try {
+            if (null !== $utilisateurId) {
+                $utilisateur = $this->em->getRepository(Utilisateur::class)->find($utilisateurId);
+                if (!$utilisateur) {
+                    return new JsonResponse(['message' => "L'utilisateur n'existe pas"], Response::HTTP_NOT_FOUND);
+                }
+            }
+
+            if (null !== $classeId) {
+                $classe = $this->em->getRepository(Classe::class)->find($classeId);
+                if (!$classe) {
+                    return new JsonResponse(['message' => "La classe n'existe pas"], Response::HTTP_NOT_FOUND);
+                }
+            }
+
+            if (null !== $etablissementId) {
+                $etablissement = $this->em->getRepository(Etablissement::class)->find($etablissementId);
+                if (!$etablissement) {
+                    return new JsonResponse(['message' => "L'établissement n'existe pas"], Response::HTTP_NOT_FOUND);
+                }
+            }
+
+            $sessions = $this->em->getRepository(Session::class)->getSessionsFiltres(
+                $utilisateur,
+                $classe,
+                $etablissement,
+            );
+        } catch (Exception) {
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return new JsonResponse($this->serializer->serialize($sessions, 'json', ['groups' => 'session']), Response::HTTP_OK);
+    }
+
+    /**
+     * @OA\Get(
      *     path="/api/sessions/{sessionId}",
      *     tags={"Sessions"},
      *     summary="Récupère une session par ID",
