@@ -122,7 +122,6 @@ class BatimentController extends AbstractController
      *          in="query",
      *          required=false,
      *          description="Libellé correspondant aux bâtiments que l'on souhaite récupérer"
-     *
      *      ),
      *     @OA\Parameter(
      *           name="ville",

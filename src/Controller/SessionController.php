@@ -336,4 +336,75 @@ class SessionController extends AbstractController
 
         return new JsonResponse($this->serializer->serialize($sessions, 'json', ['groups' => 'session']), Response::HTTP_OK);
     }
+
+    /**
+     * @OA\Patch(
+     *     path="/api/sessions/{sessionId}/utilisateur/{utilisateurId}/choix",
+     *     tags={"Sessions"},
+     *     summary="Acceptation ou refus d'une session par un utilisateur",
+     *     @OA\Parameter(
+     *         name="sessionId",
+     *         @OA\Schema(type="integer"),
+     *         in="path",
+     *         required=true,
+     *         description="ID de la session"
+     *     ),
+     *     @OA\Parameter(
+     *         name="utilisateurId",
+     *         @OA\Schema(type="integer"),
+     *         in="path",
+     *         required=true,
+     *         description="ID de l'utilisateur"
+     *     ),
+     *     @OA\Parameter(
+     *           name="choix",
+     *           @OA\Schema(type="boolean"),
+     *           in="query",
+     *           required=true,
+     *           description="Booléen indiquant l'acceptation/refus d'une session"
+     *       ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Session acceptée ou refusée avec succès"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Session ou utilisateur non trouvé"
+     *     ),
+     *     @OA\Response(
+     *          response=500,
+     *          description="Erreur technique"
+     *      )
+     * )
+     *
+     * @Rest\Patch("/api/sessions/{sessionId}/utilisateur/{utilisateurId}/choix")
+     * @Security(name="Bearer")
+     */
+    public function patchSessionAcceptation(int $sessionId, int $utilisateurId, Request $request): JsonResponse
+    {
+        try {
+            $choix = boolval($request->query?->get('choix'));
+            $session = $this->em->getRepository(Session::class)->find($sessionId);
+            $utilisateur = $this->em->getRepository(Utilisateur::class)->find($utilisateurId);
+
+            if (!$session || !$utilisateur) {
+                return new JsonResponse(['message' => 'Session ou utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
+            }
+
+            if (
+                $session->getUtilisateur()->getId() !== $utilisateur->getId()
+                || null !== $session->getEstAcceptee()
+            ) {
+                return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
+
+            }
+
+            $session->setEstAcceptee($choix);
+            $this->em->flush();
+        } catch (Exception) {
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+        $res = $choix ? 'acceptée' : 'refusée';
+        return new JsonResponse(['message' => "Session $res avec succès"], Response::HTTP_OK);
+    }
 }

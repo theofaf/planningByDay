@@ -50,6 +50,10 @@ class Session
     #[Groups(["nelmio", "session"])]
     private ?Statut $statut = null;
 
+    #[ORM\Column]
+    #[Groups(["nelmio", "message"])]
+    private ?bool $estAcceptee = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -135,6 +139,17 @@ class Session
     public function setStatut(?Statut $statut): self
     {
         $this->statut = $statut;
+        return $this;
+    }
+
+    public function getEstAcceptee(): ?bool
+    {
+        return $this->estAcceptee;
+    }
+
+    public function setEstAcceptee(?bool $estAcceptee): self
+    {
+        $this->estAcceptee = $estAcceptee;
         return $this;
     }
 }
