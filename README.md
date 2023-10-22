@@ -23,7 +23,7 @@ Si vous ne possèdez pas scoop, pas de panique et suivez ces étapes.
 - **Assurez** vous d'avoir le fichier **.env** dans votre fichiers sources (demandez-le à l'équipe technique en charge du projet si nécessaire)
 - **Ouvrer un terminal git bash** dans votre **IDE** pour **lancer** la commande : **sh initProject.sh**
 - Ensuite, nous allons **installer le certifat TLS** pour le serveur symfony : **symfony.exe server:ca:install**
-- Enfin, pour **lancer votre serveur en local**, c'est tous simple : **symfony server:start**  (pour l'arrêt : symfony server:start)
+- Enfin, pour **lancer votre serveur en local**, c'est tous simple : **symfony server:start**  (pour l'arrêt : symfony server:stop)
 - Et voilà, votre environnement de travail est **prêt** !
 
 # contraintes pour créer la fixtures session :
@@ -38,9 +38,6 @@ il faut vérifier :
 - que le module fait bien parti du cursus de la classe
 - que la durée totale des sessions d'un module d'une classe ne dépasse pas la durée totale du module
   (exemple : si un module A fait 3h, une classe ne peut pas avoir 4h de ce module A)
-- peut être d'autres truc mais t'as capté l'idée le sang
 
 # faire modif/ajout
 - il manque des info concernant les modules (distanciel, présentiel, campus en ligne)
-- commencer l'authentification
-- commencer les controllers rest

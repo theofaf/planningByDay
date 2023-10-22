@@ -13,6 +13,7 @@
         "doctrine/doctrine-migrations-bundle": "^3.2",
         "doctrine/orm": "^2.16",
         "fakerphp/faker": "^1.23",
+        "friendsofsymfony/rest-bundle": "*",
         "lexik/jwt-authentication-bundle": "^2.18",
         "nelmio/api-doc-bundle": "^4.12",
         "phpdocumentor/reflection-docblock": "^5.3",

@@ -3,9 +3,10 @@
 namespace App\Repository;
 
 use App\Entity\Batiment;
-use App\Entity\Etablissement;
 use App\Entity\Salle;
+use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -40,6 +41,22 @@ class SalleRepository extends ServiceEntityRepository
             ;
         }
 
+        return $qb->getQuery()->getResult();
+    }
+
+    public function getSallesWithDisponibilites(Batiment $batiment, DateTime $dateDebut, DateTime $dateFin)
+    {
+        $qb = $this->createQueryBuilder('s');
+
+        $qb
+            ->andWhere($qb->expr()->gte("DATE_FORMAT(session.dateDebut, '%d/%m/%Y')", 'dateDebut' ))
+            ->andWhere($qb->expr()->lte("DATE_FORMAT(session.dateFin, '%d/%m/%Y')", ':dateFin'))
+            ->andWhere($qb->expr()->eq('s.batiment', ':batiment'))
+            ->join('s.sessions', 'session', Join::WITH , 'session.id IN (s.sessions)')
+            ->setParameter('batiment', $batiment->getId())
+            ->setParameter('dateDebut', $dateDebut->format('d/m/Y'))
+            ->setParameter('dateFin', $dateFin->format('d/m/Y'))
+        ;
         return $qb->getQuery()->getResult();
     }
 }

@@ -35,7 +35,7 @@ class BatimentController extends AbstractController
      *     summary="Récupère tous les bâtiments",
      *     @OA\Response(
      *          response=200,
-     *          description="Les batiments de tous les bâtiments sont retournés",
+     *          description="Tous les bâtiments sont retournés",
      *          @OA\JsonContent(
      *              type="array",
      *              @OA\Items(ref=@Model(type=Batiment::class, groups={"batiment"}))
