@@ -421,7 +421,6 @@ class UtilisateurController extends AbstractController
             $ancienMdp = $request->query?->get('password');
             $nouveauMdp = $request->query?->get('passwordNew');
             $isValid = $this->passwordHasher->isPasswordValid($utilisateur, $ancienMdp);
-            var_dump($isValid);
 
             if (
                 null === $ancienMdp || null == $nouveauMdp
