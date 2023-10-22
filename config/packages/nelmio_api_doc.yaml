@@ -36,6 +36,8 @@ nelmio_api_doc:
                 - M BORDAGE Jordan : [jordan.bordage2019@campus-eni.fr](mailto:jordan.bordage2019@campus-eni.fr)
             version: 1.0.0
         tags:
+            - name: Authentification
+              description: Vérifie la validité d'un bearer token
             - name: Abonnements
               description: Visualisation et gestion des abonnements
             - name: Batiments
@@ -44,8 +46,6 @@ nelmio_api_doc:
               description: Visualisation et gestion des statuts
             - name: Tickets
               description: Visualisation et gestion des tickets
-            - name: Authentification
-              description: Vérifie la validité d'un bearer token
             - name: Etablissements
               description: Visualisation et gestion des établissements
             - name: Messages
@@ -56,12 +56,44 @@ nelmio_api_doc:
               description: Visualisation et gestion des salles
             - name: Classes
               description: Visualisation et gestion des classes
-            - name: Cursus
-              description: Visualisation et gestion des cursus
             - name: Utilisateurs
               description: Visualisation et gestion des utilisateurs
             - name: Modules
               description: Visualisation et gestion des modules
+
+        paths:
+          /api/login_check:
+            get:
+              tags:
+                - Authentification
+              summary: Permet de se connecter à l'application
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      properties:
+                        username:
+                          type: string
+                        password:
+                          type: string
+                      type: object
+              responses:
+                '200':
+                  description: OK
+                  content:
+                    application/json:
+                      schema:
+                        type: object
+                        properties:
+                          token:
+                            type: string
+                          refresh_token:
+                            type: string
+                '401':
+                  description: Identifiant ou mot de passe incorrect
+                '400':
+                  description: Les données sont invalides
+              security: [ ]
     areas:
         default:
             path_patterns:
