@@ -304,7 +304,6 @@ class UtilisateurController extends AbstractController
                 ->setNom($data['nom'])
                 ->setPrenom($data['prenom'])
                 ->setEmail($data['email'])
-                ->setRoles([$data['roles']])
                 ->setDateDerniereAction(new DateTime())
             ;
 
