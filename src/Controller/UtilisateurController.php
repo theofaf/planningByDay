@@ -200,7 +200,7 @@ class UtilisateurController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
-        if (!$this->utilisateurService->isDataValide($data)) {
+        if (!$this->utilisateurService->isDataValide($data, false)) {
             return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
         }
 

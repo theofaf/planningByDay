@@ -4,14 +4,14 @@ namespace App\Service;
 
 class UtilisateurService
 {
-    public function isDataValide(?array $data): bool
+    public function isDataValide(?array $data, ?bool $pasDeRole = true): bool
     {
         if (
             null === $data
             || !isset($data['nom'])
             || !isset($data['prenom'])
             || !isset($data['email'])
-            || !isset($data['roles'])
+            || (!$pasDeRole && !isset($data['roles']))
             || !isset($data['etablissementId'])
         ) {
             return false;
