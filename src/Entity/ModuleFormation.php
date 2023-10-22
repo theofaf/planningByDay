@@ -15,15 +15,15 @@ class ModuleFormation
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["nelmio", "moduleFormation", "session"])]
+    #[Groups(["nelmio", "moduleFormation", "session", "ModuleFormationUtilisateur"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 30)]
-    #[Groups(["nelmio", "moduleFormation"])]
+    #[Groups(["nelmio", "moduleFormation", "ModuleFormationUtilisateur"])]
     private ?string $libelle = null;
 
     #[ORM\Column(type: Types::TIME_MUTABLE)]
-    #[Groups(["nelmio", "moduleFormation"])]
+    #[Groups(["nelmio", "moduleFormation", "ModuleFormationUtilisateur"])]
     private ?DateTimeInterface $duree = null;
 
     #[ORM\ManyToMany(targetEntity: Cursus::class, inversedBy: 'moduleFormations')]
@@ -32,7 +32,7 @@ class ModuleFormation
     private $listeCursus;
 
     #[ORM\OneToMany(mappedBy: 'moduleFormation', targetEntity: ModuleFormationUtilisateur::class, cascade: ['persist'])]
-    #[Groups(["nelmio", "moduleFormation"])]
+    #[Groups(["nelmio"])]
     /** @var ArrayCollection $moduleFormationUtilisateurs */
     private $moduleFormationUtilisateurs;
 

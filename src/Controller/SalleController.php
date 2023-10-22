@@ -328,7 +328,7 @@ class SalleController extends AbstractController
      *      )
      * )
      *
-     * @Rest\Post("/api/salles/{salleId}")
+     * @Rest\Put("/api/salles/{salleId}")
      * @Security(name="Bearer")
      */
     public function putSalle(int $salleId, Request $request): JsonResponse
@@ -450,17 +450,20 @@ class SalleController extends AbstractController
     public function patchSalleBatiment(int $batimentId, int $salleId): JsonResponse
     {
         try {
-            $batiment = $this->em->getRepository(Batiment::class)->find($batimentId);
+            $nouveauBatiment = $this->em->getRepository(Batiment::class)->find($batimentId);
             $salle = $this->em->getRepository(Salle::class)->find($salleId);
 
-            if (!$batiment || !$salle) {
+            if (!$nouveauBatiment || !$salle) {
                 return new JsonResponse(['message' => 'Bâtiment ou salle non trouvé'], Response::HTTP_NOT_FOUND);
             }
-
             $ancienBatiment = $salle->getBatiment();
+            if ($nouveauBatiment->getEtablissement()->getId() !== $ancienBatiment->getEtablissement()->getId()) {
+                return new JsonResponse(['message' => 'Le bâtiment ne se situe pas dans le bon établissment'], Response::HTTP_BAD_REQUEST);
+            }
+
             $ancienBatiment->removeSalle($salle);
-            $salle->setBatiment($batiment);
-            $batiment->addSalle($salle);
+            $salle->setBatiment($nouveauBatiment);
+            $nouveauBatiment->addSalle($salle);
             $this->em->flush();
         } catch (Exception) {
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
