@@ -13,11 +13,11 @@ class Cursus
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["nelmio", "cursus", "moduleFormation", "classe"])]
+    #[Groups(["nelmio", "cursus", "classe", "moduleFormation"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 30)]
-    #[Groups(["nelmio", "cursus"])]
+    #[Groups(["nelmio", "cursus", "moduleFormation"])]
     private ?string $libelle = null;
 
     #[ORM\OneToMany(mappedBy: 'cursus', targetEntity: Classe::class)]
@@ -26,7 +26,7 @@ class Cursus
     private $classes;
 
     #[ORM\ManyToMany(targetEntity: ModuleFormation::class, mappedBy: 'listeCursus')]
-    #[Groups(["nelmio", "cursus", "moduleFormation"])]
+    #[Groups(["nelmio", "cursus"])]
     /** @var ArrayCollection $moduleFormations */
     private $moduleFormations;
 
