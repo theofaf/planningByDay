@@ -308,12 +308,6 @@ class UtilisateurController extends AbstractController
                 ->setDateDerniereAction(new DateTime())
             ;
 
-            $etablissement = $this->em->getRepository(Etablissement::class)->find($data['etablissementId']);
-            if (!$etablissement) {
-                return new JsonResponse(['message' => 'Établissement non trouvé'], Response::HTTP_NOT_FOUND);
-            }
-
-            $utilisateur->setEtablissement($etablissement);
             $this->em->flush();
         } catch (Exception) {
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
