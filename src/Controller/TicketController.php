@@ -322,4 +322,54 @@ class TicketController extends AbstractController
 
         return new JsonResponse($this->serializer->serialize($tickets, 'json', ['groups' => 'ticket']), Response::HTTP_OK);
     }
+
+    /**
+     * @OA\Get(
+     *     path="/api/tickets/utilisateur/{utilisateurId}",
+     *     tags={"Tickets"},
+     *     summary="Récupère les tickets d'un utilisateur",
+     *     @OA\Parameter(
+     *          name="utilisateurId",
+     *          @OA\Schema(type="integer"),
+     *          in="path",
+     *          required=true,
+     *          description="ID de l'utilisateur"
+     *      ),
+     *     @OA\Response(
+     *           response=200,
+     *           description="La liste des tickets d'un utilisateur est retournée",
+     *           @OA\JsonContent(
+     *               type="array",
+     *               @OA\Items(ref=@Model(type=Ticket::class, groups={"ticket"}))
+     *           )
+     *      ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="L'utilisateur n'a pas été trouvé"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur technique"
+     *     )
+     * )
+     *
+     * @Rest\Get("/api/tickets/utilisateur/{utilisateurId}")
+     * @Security(name="Bearer")
+     */
+    public function getTicketsByUtilisateur(int $utilisateurId): JsonResponse
+    {
+        try {
+            $utilisateur = $this->em->getRepository(Utilisateur::class)->find($utilisateurId);
+
+            if (!$utilisateur) {
+                return new JsonResponse(['message' => "L'utilisateur n'existe pas"], Response::HTTP_NOT_FOUND);
+            }
+
+            $tickets = $this->em->getRepository(Ticket::class)->findBy(['utilisateur' => $utilisateur->getId()]);
+        } catch (Exception) {
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return new JsonResponse($this->serializer->serialize($tickets, 'json', ['groups' => 'ticket']), Response::HTTP_OK);
+    }
 }
