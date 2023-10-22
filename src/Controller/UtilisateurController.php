@@ -357,4 +357,85 @@ class UtilisateurController extends AbstractController
 
         return new JsonResponse(['message' => 'Utilisateur supprimé avec succès'], Response::HTTP_NO_CONTENT);
     }
+
+    /**
+     * @OA\Patch(
+     *     path="/api/utilisateurs/{utilisateurId}/changement-mot-de-passe",
+     *     tags={"Utilisateurs"},
+     *     summary="Modifier le mot de passe d'un utilisateur",
+     *     @OA\Parameter(
+     *           name="utilisateurId",
+     *           @OA\Schema(type="integer"),
+     *           in="path",
+     *           required=true,
+     *           description="ID du utilisateur"
+     *       ),
+     *     @OA\Parameter(
+     *            name="ancienMdp",
+     *            @OA\Schema(type="integer"),
+     *            in="query",
+     *            required=true,
+     *            description="ancien mot de passe de l'utilisateur"
+     *        ),
+     *     @OA\Parameter(
+     *            name="nouveauMdp",
+     *            @OA\Schema(type="integer"),
+     *            in="query",
+     *            required=true,
+     *            description="nouveau mot de passe de l'utilisateur"
+     *        ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Mot de passe de l'utilisateur modifié avec succès",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(ref=@Model(type=Utilisateur::class, groups={"utilisateur"}))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Données invalides"
+     *     ),
+     *     @OA\Response(
+     *          response=404,
+     *          description="Utilisateur non trouvé"
+     *      ),
+     *     @OA\Response(
+     *          response=500,
+     *          description="Erreur technique"
+     *      )
+     * )
+     *
+     * @Rest\Patch("/api/utilisateurs/{utilisateurId}/changement-mot-de-passe")
+     * @Security(name="Bearer")
+     */
+    public function patchUtilisateurMdp(int $utilisateurId, Request $request): JsonResponse
+    {
+        try {
+            $utilisateur = $this->em->getRepository(Utilisateur::class)->find($utilisateurId);
+
+            if (!$utilisateur) {
+                return new JsonResponse(['message' => 'Utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
+            }
+
+            $ancienMdp = $request->query?->get('password');
+            $nouveauMdp = $request->query?->get('passwordNew');
+            $ancienMdpHash = $this->passwordHasher->hashPassword($utilisateur, $ancienMdp);
+
+            if (
+                null === $ancienMdp || null == $nouveauMdp
+                || $ancienMdpHash !== $utilisateur->getPassword()
+            ) {
+                return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $utilisateur->setPassword($this->passwordHasher->hashPassword($utilisateur, $nouveauMdp));
+            $this->em->flush();
+        } catch (Exception) {
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return new JsonResponse(['message' => 'Utilisateur supprimé avec succès'], Response::HTTP_NO_CONTENT);
+    }
+    
 }
