@@ -45,6 +45,11 @@ class Session
     #[Groups(["nelmio", "session"])]
     private ?Salle $salle = null;
 
+    #[ORM\ManyToOne(targetEntity: Statut::class)]
+    #[ORM\JoinColumn(nullable: false)]
+    #[Groups(["nelmio", "session"])]
+    private ?Statut $statut = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -119,6 +124,17 @@ class Session
     {
         $this->salle = $salle;
 
+        return $this;
+    }
+
+    public function getStatut(): ?Statut
+    {
+        return $this->statut;
+    }
+
+    public function setStatut(?Statut $statut): self
+    {
+        $this->statut = $statut;
         return $this;
     }
 }

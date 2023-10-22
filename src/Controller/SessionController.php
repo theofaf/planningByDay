@@ -6,6 +6,7 @@ use App\Entity\Classe;
 use App\Entity\Etablissement;
 use App\Entity\ModuleFormation;
 use App\Entity\Salle;
+use App\Entity\Statut;
 use App\Entity\Utilisateur;
 use App\Service\SessionService;
 use DateTime;
@@ -212,9 +213,12 @@ class SessionController extends AbstractController
             $classe = $this->em->getRepository(Classe::class)->find($data['classeId']);
             $utilisateur = $this->em->getRepository(Utilisateur::class)->find($data['utilisateurId']);
             $salle = $this->em->getRepository(Salle::class)->find($data['salleId']);
+            $statutAttente = $this->em->getRepository(Statut::class)->find(Statut::STATUT_ATTENTE_ID);
 
             if (!$moduleFormation || !$classe || !$utilisateur || !$salle) {
                 return new JsonResponse(['message' => "Le module ou salle ou classe ou utilisateur n'existe pas"], Response::HTTP_NOT_FOUND);
+            } elseif (!$statutAttente) {
+                return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
             $session = (new Session())
@@ -224,6 +228,7 @@ class SessionController extends AbstractController
                 ->setUtilisateur($utilisateur)
                 ->setClasse($classe)
                 ->setSalle($salle)
+                ->setStatut($statutAttente)
             ;
 
             $this->em->persist($session);
