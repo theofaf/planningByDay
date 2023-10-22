@@ -14,6 +14,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
 class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
 {
+    public const ROLES_POSSIBLE = ['ROLE_USER', 'ROLE_ADMIN', 'ROLE_SUPPORT', 'ROLE_RESPONSABLE_PLANNING'];
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
