@@ -8,12 +8,12 @@ use App\Entity\ModuleFormation;
 use App\Entity\Salle;
 use App\Entity\Statut;
 use App\Entity\Utilisateur;
+use App\Service\LogService;
 use App\Service\SessionService;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Exception;
 use App\Entity\Session;
@@ -30,6 +30,7 @@ class SessionController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly SerializerInterface $serializer,
         private readonly SessionService $serviceSession,
+        private readonly LogService $logService,
     ) {
     }
 
@@ -59,7 +60,8 @@ class SessionController extends AbstractController
     {
         try {
             $sessions = $this->em->getRepository(Session::class)->findAll();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des sessions a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -149,7 +151,8 @@ class SessionController extends AbstractController
                 $classe,
                 $etablissement,
             );
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des sessions filtrés a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -197,7 +200,8 @@ class SessionController extends AbstractController
             if (!$session) {
                 return new JsonResponse(['message' => 'Session non trouvée'], Response::HTTP_NOT_FOUND);
             }
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération de la session [$sessionId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -247,7 +251,8 @@ class SessionController extends AbstractController
             }
 
             $sessions = $this->em->getRepository(Session::class)->getSessionsParEtablissementId($etablissement->getId());
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des sessions pour l'établissement [$etablissementId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -321,7 +326,8 @@ class SessionController extends AbstractController
 
             $this->em->persist($session);
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La création de la session a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -368,7 +374,8 @@ class SessionController extends AbstractController
 
             $this->em->remove($session);
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La suppression de la session [$sessionId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -418,7 +425,8 @@ class SessionController extends AbstractController
             }
 
             $sessions = $this->em->getRepository(Session::class)->findBy(['classe' => $classe->getId()]);
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des sessions de la classe [$classeId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -471,7 +479,6 @@ class SessionController extends AbstractController
     public function patchSessionAcceptation(int $sessionId, int $utilisateurId, Request $request): JsonResponse
     {
         try {
-
             $choix = $request->query?->get('choix');
             $session = $this->em->getRepository(Session::class)->find($sessionId);
             $utilisateur = $this->em->getRepository(Utilisateur::class)->find($utilisateurId);
@@ -489,7 +496,8 @@ class SessionController extends AbstractController
 
             $session->setEstAcceptee($choix);
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("Le choix du formateur de la session [$sessionId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
         $res = $choix ? 'acceptée' : 'refusée';

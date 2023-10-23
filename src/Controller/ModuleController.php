@@ -6,11 +6,11 @@ namespace App\Controller;
 use App\Entity\Cursus;
 use App\Entity\ModuleFormationUtilisateur;
 use App\Entity\Utilisateur;
+use App\Service\LogService;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Exception;
 use App\Entity\ModuleFormation;
@@ -26,6 +26,7 @@ class ModuleController extends AbstractController
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly SerializerInterface $serializer,
+        private readonly LogService $logService,
     ) {
     }
 
@@ -80,7 +81,8 @@ class ModuleController extends AbstractController
 
             $this->em->persist($module);
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La création du module a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -146,7 +148,8 @@ class ModuleController extends AbstractController
                 ->setDuree(DateTime::createFromFormat('H', $data['duree']))
             ;
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La modification du module a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -193,7 +196,8 @@ class ModuleController extends AbstractController
         try {
             $this->em->remove($module);
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La suppression du module [$moduleId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -226,7 +230,8 @@ class ModuleController extends AbstractController
     {
         try {
             $modules = $this->em->getRepository(ModuleFormation::class)->findAll();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des modules a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -276,7 +281,8 @@ class ModuleController extends AbstractController
             }
 
             $modules = $this->em->getRepository(ModuleFormation::class)->getModulesParCursusId($cursus->getId());
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des modules du cursus [$cursusId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -326,7 +332,8 @@ class ModuleController extends AbstractController
             }
 
             $modules = $this->em->getRepository(ModuleFormationUtilisateur::class)->findBy(['utilisateur' => $utilisateur->getId()]);
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des modules de l'utilisateur [$utilisateurId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -374,7 +381,8 @@ class ModuleController extends AbstractController
             if (!$module) {
                 return new JsonResponse(['message' => "Le module n'existe pas"], Response::HTTP_NOT_FOUND);
             }
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération du module [$moduleId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 

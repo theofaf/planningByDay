@@ -4,8 +4,8 @@ namespace App\Controller;
 
 use App\Entity\Batiment;
 use App\Entity\Etablissement;
-use App\Repository\BatimentRepository;
 use App\Service\BatimentService;
+use App\Service\LogService;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use FOS\RestBundle\Controller\Annotations as Rest;
@@ -16,7 +16,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class BatimentController extends AbstractController
@@ -25,6 +24,7 @@ class BatimentController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly BatimentService $serviceBatiment,
         private readonly SerializerInterface $serializer,
+        private readonly LogService $logService,
     ) {
     }
 
@@ -54,7 +54,8 @@ class BatimentController extends AbstractController
     {
         try {
             $batiments = $this->em->getRepository(Batiment::class)->findAll();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des bâtiments a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -104,7 +105,8 @@ class BatimentController extends AbstractController
             }
 
             $batiments = $this->em->getRepository(Batiment::class)->findBy(['etablissement' => $etablissement->getId()]);
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des bâtiments pour l'établissement [$etablissementId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -170,7 +172,8 @@ class BatimentController extends AbstractController
 
         try {
             $batiments = $this->em->getRepository(Batiment::class)->findBatimentByFiltres($libelle, $ville, $codePostal);
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des bâtiments par filtres a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -218,7 +221,8 @@ class BatimentController extends AbstractController
             if (!$batiment) {
                 return new JsonResponse(['message' => 'Bâtiment non trouvé'], Response::HTTP_NOT_FOUND);
             }
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération du bâtiment [$batimentId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -286,7 +290,8 @@ class BatimentController extends AbstractController
             $batiment->setEtablissement($etablissement);
             $this->em->persist($batiment);
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La création du bâtiment a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -359,7 +364,8 @@ class BatimentController extends AbstractController
                 ->setCodePostal($data['codePostal'])
                 ->setNumeroTel($data['numeroTel'])
             ;
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La modification du bâtiment [$batimentId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -408,7 +414,8 @@ class BatimentController extends AbstractController
         try {
             $this->em->remove($batiment);
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La suppression du bâtiment [$batimentId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 

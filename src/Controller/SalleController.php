@@ -3,16 +3,14 @@
 namespace App\Controller;
 
 use App\Entity\Batiment;
-use App\Repository\BatimentRepository;
+use App\Service\LogService;
 use App\Service\SalleService;
 use DateTime;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\Salle;
-use App\Entity\Etablissement;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use FOS\RestBundle\Controller\Annotations as Rest;
@@ -28,6 +26,7 @@ class SalleController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly SerializerInterface $serializer,
         private readonly SalleService $serviceSalle,
+        private readonly LogService $logService,
     ) {
     }
 
@@ -57,7 +56,8 @@ class SalleController extends AbstractController
     {
         try {
             $salles = $this->em->getRepository(Salle::class)->findAll();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des salles a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -105,7 +105,8 @@ class SalleController extends AbstractController
             if (!$salle) {
                 return new JsonResponse(['message' => 'Salle non trouvé'], Response::HTTP_NOT_FOUND);
             }
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération de la salle [$salleId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -155,7 +156,8 @@ class SalleController extends AbstractController
             }
 
             $salles = $this->em->getRepository(Salle::class)->findBy(['batiment' => $batiment->getId()]);
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des salles du bâtiment [$batimentId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -226,8 +228,8 @@ class SalleController extends AbstractController
                 $dateDebut,
                 $dateFin,
             );
-        } catch (Exception $e) {
-            var_dump($e);
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des dispos des salles du bâtiment [$batimentId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -277,13 +279,13 @@ class SalleController extends AbstractController
             return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
         }
 
-        $salle = (new Salle())
-            ->setLibelle($data['libelle'])
-            ->setEquipementInfo($data['equipementInfo'])
-            ->setNbPlace($data['nbPlace'])
-        ;
-
         try {
+            $salle = (new Salle())
+                ->setLibelle($data['libelle'])
+                ->setEquipementInfo($data['equipementInfo'])
+                ->setNbPlace($data['nbPlace'])
+            ;
+
             $batiment = $this->em->getRepository(Batiment::class)->find($data['batimentId']);
             if (!$batiment) {
                 return new JsonResponse(['message' => 'Établissement non trouvé'], Response::HTTP_NOT_FOUND);
@@ -292,7 +294,8 @@ class SalleController extends AbstractController
             $salle->setBatiment($batiment);
             $this->em->persist($salle);
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La création de la salle a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -355,7 +358,8 @@ class SalleController extends AbstractController
             }
 
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La modification de la salle [$salleId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -404,7 +408,8 @@ class SalleController extends AbstractController
         try {
             $this->em->remove($salle);
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La suppression de la salle [$salleId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -465,7 +470,8 @@ class SalleController extends AbstractController
             $salle->setBatiment($nouveauBatiment);
             $nouveauBatiment->addSalle($salle);
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("Le changement de bâtiment de la salle [$salleId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 

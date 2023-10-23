@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Service\EtablissementService;
+use App\Service\LogService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use App\Entity\Etablissement;
@@ -22,6 +23,7 @@ class EtablissementController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly SerializerInterface $serializer,
         private readonly EtablissementService $etablissementService,
+        private readonly LogService $logService,
     ) {
     }
 
@@ -64,20 +66,21 @@ class EtablissementController extends AbstractController
             return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
         }
 
-        $etablissement = (new Etablissement())
-            ->setLibelle($data['libelle'])
-            ->setNumVoie((int)$data['numVoie'])
-            ->setRue($data['rue'])
-            ->setVille($data['ville'])
-            ->setCodePostal($data['codePostal'])
-            ->setNumeroTel($data['numeroTel'])
-            ->setStatutAbonnement(false)
-        ;
-
         try {
+            $etablissement = (new Etablissement())
+                ->setLibelle($data['libelle'])
+                ->setNumVoie((int)$data['numVoie'])
+                ->setRue($data['rue'])
+                ->setVille($data['ville'])
+                ->setCodePostal($data['codePostal'])
+                ->setNumeroTel($data['numeroTel'])
+                ->setStatutAbonnement(false)
+            ;
+
             $this->em->persist($etablissement);
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La création de l'établissement a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -150,7 +153,8 @@ class EtablissementController extends AbstractController
                 ->setCodePostal($data['codePostal'])
                 ->setNumeroTel($data['numeroTel'])
             ;
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La modification de l'établissement [$etablissementId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -190,16 +194,17 @@ class EtablissementController extends AbstractController
      */
     public function deleteEtablissement(int $etablissementId): JsonResponse
     {
-        $etablissement = $this->em->getRepository(Etablissement::class)->find($etablissementId);
-
-        if (!$etablissement) {
-            return new JsonResponse(['message' => 'Établissement non trouvé'], Response::HTTP_NOT_FOUND);
-        }
-
         try {
+            $etablissement = $this->em->getRepository(Etablissement::class)->find($etablissementId);
+
+            if (!$etablissement) {
+                return new JsonResponse(['message' => 'Établissement non trouvé'], Response::HTTP_NOT_FOUND);
+            }
+
             $this->em->remove($etablissement);
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La suppression de l'établissement [$etablissementId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -247,7 +252,8 @@ class EtablissementController extends AbstractController
             if (!$etablissement) {
                 return new JsonResponse(['message' => 'Établissement non trouvé'], Response::HTTP_NOT_FOUND);
             }
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération de l'établissement [$etablissementId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -280,7 +286,8 @@ class EtablissementController extends AbstractController
     {
         try {
             $etablissement = $this->em->getRepository(Etablissement::class)->findAll();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des établissements a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 

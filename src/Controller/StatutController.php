@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Service\LogService;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use FOS\RestBundle\Controller\Annotations as Rest;
@@ -12,8 +13,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
-use DateTime;
 use Nelmio\ApiDocBundle\Annotation\Model;
 use Nelmio\ApiDocBundle\Annotation\Operation;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -23,6 +22,7 @@ class StatutController extends AbstractController
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly SerializerInterface $serializer,
+        private readonly LogService $logService,
     ) {
     }
 
@@ -52,7 +52,8 @@ class StatutController extends AbstractController
     {
         try {
             $statuts = $this->em->getRepository(Statut::class)->findAll();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des statuts a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -94,7 +95,8 @@ class StatutController extends AbstractController
     {
         try {
             $statut = $this->em->getRepository(Statut::class)->find($statutId);
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération du statut [$statutId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -144,15 +146,16 @@ class StatutController extends AbstractController
             return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
         }
 
-        $statut = (new Statut())
-            ->setLibelle($data['libelle'])
-            ->setLibelleTechnique($data['libelle_technique'])
-        ;
-
         try {
+            $statut = (new Statut())
+                ->setLibelle($data['libelle'])
+                ->setLibelleTechnique($data['libelle_technique'])
+            ;
+
             $this->em->persist($statut);
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La création du statut a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -218,20 +221,20 @@ class StatutController extends AbstractController
             return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
         }
 
-        $statut = $this->em->getRepository(Statut::class)->find($statutId);
-
-        if (!$statut) {
-            return new JsonResponse(['message' => 'Statut non trouvé'], Response::HTTP_NOT_FOUND);
-        }
-
-        $statut
-            ->setLibelle($data['libelle'])
-            ->setLibelleTechnique($data['libelle_technique'])
-        ;
-
         try {
+            $statut = $this->em->getRepository(Statut::class)->find($statutId);
+
+            if (!$statut) {
+                return new JsonResponse(['message' => 'Statut non trouvé'], Response::HTTP_NOT_FOUND);
+            }
+
+            $statut
+                ->setLibelle($data['libelle'])
+                ->setLibelleTechnique($data['libelle_technique'])
+            ;
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La modification du statut [$statutId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -273,16 +276,16 @@ class StatutController extends AbstractController
      */
     public function deleteStatut(int $statutId): JsonResponse
     {
-        $statut = $this->em->getRepository(Statut::class)->find($statutId);
-
-        if (!$statut) {
-            return new JsonResponse(['message' => 'Statut non trouvé'], Response::HTTP_NOT_FOUND);
-        }
-
         try {
+            $statut = $this->em->getRepository(Statut::class)->find($statutId);
+
+            if (!$statut) {
+                return new JsonResponse(['message' => 'Statut non trouvé'], Response::HTTP_NOT_FOUND);
+            }
             $this->em->remove($statut);
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La suppression du statut [$statutId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 

@@ -4,11 +4,10 @@ namespace App\Controller;
 
 use App\Entity\Abonnement;
 use App\Entity\Etablissement;
-use App\Repository\AbonnementRepository;
-use App\Repository\EtablissementRepository;
+use App\Service\LogService;
 use DateTime;
-use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use Nelmio\ApiDocBundle\Annotation\Security;
 use OpenApi\Annotations as OA;
@@ -25,6 +24,7 @@ class AbonnementController extends AbstractController
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly SerializerInterface $serializer,
+        private readonly LogService $logService,
     ) {
     }
 
@@ -54,7 +54,8 @@ class AbonnementController extends AbstractController
     {
         try {
             $abonnements = $this->em->getRepository(Abonnement::class)->findAll();
-        } catch (\Exception) {
+        } catch (Exception $e) {
+            $this->logService->insererLog("La récupération des abonnements a échoué.", $e);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -97,7 +98,8 @@ class AbonnementController extends AbstractController
     {
        try {
             $abonnement = $this->em->getRepository(Abonnement::class)->find($abonnementId);
-        } catch (\Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération de l'abonnement avec l'id [$abonnementId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -157,7 +159,8 @@ class AbonnementController extends AbstractController
         try {
             $this->em->persist($abonnement);
             $this->em->flush();
-        } catch (\Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La création de l'abonnement a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -220,20 +223,21 @@ class AbonnementController extends AbstractController
             return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
         }
 
-        $abonnement = $this->em->getRepository(Abonnement::class)->find($abonnementId);
-
-        if (!$abonnement) {
-            return new JsonResponse(['message' => 'Abonnement non trouvé'], Response::HTTP_NOT_FOUND);
-        }
-
-        $abonnement
-            ->setLibelle($data['libelle'])
-            ->setLibelleTechnique($data['libelle_technique'])
-            ->setPrix($data['prix'])
-        ;
         try {
+            $abonnement = $this->em->getRepository(Abonnement::class)->find($abonnementId);
+            if (!$abonnement) {
+                return new JsonResponse(['message' => 'Abonnement non trouvé'], Response::HTTP_NOT_FOUND);
+            }
+
+            $abonnement
+                ->setLibelle($data['libelle'])
+                ->setLibelleTechnique($data['libelle_technique'])
+                ->setPrix($data['prix'])
+            ;
+
             $this->em->flush();
-        } catch (\Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La modification de l'abonnement a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -280,7 +284,8 @@ class AbonnementController extends AbstractController
         try {
             $this->em->remove($abonnement);
             $this->em->flush();
-        } catch (\Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La suppression de l'abonnement a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -352,7 +357,8 @@ class AbonnementController extends AbstractController
 
         try {
             $this->em->flush();
-        } catch (\Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("L'inscription à l'abonnement [$abonnementId] pour l'établissement [$etablissementId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -422,7 +428,8 @@ class AbonnementController extends AbstractController
 
         try {
             $this->em->flush();
-        } catch (\Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La désinscription à l'abonnement [$abonnementId] pour l'établissement [$etablissementId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 

@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Etablissement;
 use App\Entity\Statut;
 use App\Entity\Utilisateur;
+use App\Service\LogService;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
@@ -24,6 +25,7 @@ class TicketController extends AbstractController
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly SerializerInterface $serializer,
+        private readonly LogService $logService,
     ) {
     }
 
@@ -53,7 +55,8 @@ class TicketController extends AbstractController
     {
         try {
             $tickets = $this->em->getRepository(Ticket::class)->findAll();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des tickets a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -94,7 +97,8 @@ class TicketController extends AbstractController
     {
         try {
             $ticket = $this->em->getRepository(Ticket::class)->find($ticketId);
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération du ticket [$ticketId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -147,35 +151,35 @@ class TicketController extends AbstractController
             return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
         }
 
-        $statut = $this->em->getRepository(Statut::class)->find(Statut::STATUT_PUBLIE_ID);
-        $utilisateur = $this->em->getRepository(Utilisateur::class)->find($data['utilisateurId']);
-        $etablissement = $this->em->getRepository(Etablissement::class)->find($data['etablissementId']);
-
-        if (!$statut) {
-            return new JsonResponse(['message' => 'Statut non trouvé'], Response::HTTP_NOT_FOUND);
-        }
-
-        if (!$utilisateur) {
-            return new JsonResponse(['message' => 'utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
-        }
-
-        if (!$etablissement) {
-            return new JsonResponse(['message' => 'Établissement non trouvé'], Response::HTTP_NOT_FOUND);
-        }
-
-        $ticket = (new Ticket())
-            ->setSujet($data['sujet'])
-            ->setMessage($data['message'])
-            ->setStatut($statut)
-            ->setUtilisateur($utilisateur)
-            ->setEtablissement($etablissement)
-            ->setDateEnvoi(new DateTime())
-        ;
-
         try {
+            $statut = $this->em->getRepository(Statut::class)->find(Statut::STATUT_PUBLIE_ID);
+            $utilisateur = $this->em->getRepository(Utilisateur::class)->find($data['utilisateurId']);
+            $etablissement = $this->em->getRepository(Etablissement::class)->find($data['etablissementId']);
+
+            if (!$statut) {
+                return new JsonResponse(['message' => 'Statut non trouvé'], Response::HTTP_NOT_FOUND);
+            }
+
+            if (!$utilisateur) {
+                return new JsonResponse(['message' => 'utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
+            }
+
+            if (!$etablissement) {
+                return new JsonResponse(['message' => 'Établissement non trouvé'], Response::HTTP_NOT_FOUND);
+            }
+
+            $ticket = (new Ticket())
+                ->setSujet($data['sujet'])
+                ->setMessage($data['message'])
+                ->setStatut($statut)
+                ->setUtilisateur($utilisateur)
+                ->setEtablissement($etablissement)
+                ->setDateEnvoi(new DateTime())
+            ;
             $this->em->persist($ticket);
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La création du ticket a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -239,33 +243,32 @@ class TicketController extends AbstractController
             return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
         }
 
-        $ticket = $this->em->getRepository(Ticket::class)->find($ticketId);
-
-        if (!$ticket) {
-            return new JsonResponse(['message' => 'Ticket non trouvé'], Response::HTTP_NOT_FOUND);
-        }
-
-        if (isset($data['message'])) {
-            $ticket->setSujet($data['message']);
-        }
-
-        if (isset($data['sujet'])) {
-            $ticket->setSujet($data['sujet']);
-        }
-
-        if (isset($data['statutId'])) {
-            $statut = $this->em->getRepository(Statut::class)->find($data['statutId']);
-
-            if (!$statut) {
-                return new JsonResponse(['message' => 'Statut non trouvé'], Response::HTTP_NOT_FOUND);
+        try {
+            $ticket = $this->em->getRepository(Ticket::class)->find($ticketId);
+            if (!$ticket) {
+                return new JsonResponse(['message' => 'Ticket non trouvé'], Response::HTTP_NOT_FOUND);
             }
 
-            $ticket->setStatut($statut);
-        }
+            if (isset($data['message'])) {
+                $ticket->setSujet($data['message']);
+            }
 
-        try {
+            if (isset($data['sujet'])) {
+                $ticket->setSujet($data['sujet']);
+            }
+
+            if (isset($data['statutId'])) {
+                $statut = $this->em->getRepository(Statut::class)->find($data['statutId']);
+
+                if (!$statut) {
+                    return new JsonResponse(['message' => 'Statut non trouvé'], Response::HTTP_NOT_FOUND);
+                }
+
+                $ticket->setStatut($statut);
+            }
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La modification du ticket [$ticketId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -316,7 +319,8 @@ class TicketController extends AbstractController
             }
 
             $tickets = $this->em->getRepository(Ticket::class)->findBy(['etablissement' => $etablissement->getId()]);
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des tickets de l'établissement [$etablissementId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -366,7 +370,8 @@ class TicketController extends AbstractController
             }
 
             $tickets = $this->em->getRepository(Ticket::class)->findBy(['utilisateur' => $utilisateur->getId()]);
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des tickets de l'utilisateur [$utilisateurId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
