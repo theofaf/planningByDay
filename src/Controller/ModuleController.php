@@ -67,7 +67,7 @@ class ModuleController extends AbstractController
         if (
             null === $data
             || !isset($data['libelle'])
-            || (!isset($data['duree']) || !is_int($data['duree']) || $data['duree'] > 23)
+            || (!isset($data['duree']) || $data['duree'] > 23)
         ) {
             return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
         }
@@ -75,8 +75,7 @@ class ModuleController extends AbstractController
         try {
             $module = (new ModuleFormation())
                 ->setLibelle($data['libelle'])
-                ->setDuree(DateTime::createFromFormat('H', $data['duree']))
-            ;
+                ->setDuree(DateTime::createFromFormat('H', $data['duree']));
 
             $this->em->persist($module);
             $this->em->flush();
@@ -85,7 +84,7 @@ class ModuleController extends AbstractController
         }
 
         $moduleSerialize = $this->serializer->serialize($module, 'json', ['groups' => 'moduleFormation']);
-        return new JsonResponse(['message' => 'Module créé avec succès' , 'module' => $moduleSerialize], Response::HTTP_CREATED);
+        return new JsonResponse(['message' => 'Module créé avec succès', 'module' => $moduleSerialize], Response::HTTP_CREATED);
     }
 
 
@@ -143,15 +142,14 @@ class ModuleController extends AbstractController
             $module = $this->em->getRepository(ModuleFormation::class)->find($moduleId);
             $module
                 ->setLibelle($data['libelle'])
-                ->setDuree(DateTime::createFromFormat('H', $data['duree']))
-            ;
+                ->setDuree(DateTime::createFromFormat('H', $data['duree']));
             $this->em->flush();
         } catch (Exception) {
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         $moduleSerialize = $this->serializer->serialize($module, 'json', ['groups' => 'moduleFormation']);
-        return new JsonResponse(['message' => 'Module modifié avec succès' , 'module' => $moduleSerialize], Response::HTTP_OK);
+        return new JsonResponse(['message' => 'Module modifié avec succès', 'module' => $moduleSerialize], Response::HTTP_OK);
     }
 
     /**

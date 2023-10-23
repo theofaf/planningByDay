@@ -11,8 +11,7 @@ class SalleService
         if (
             null === $data
             || !isset($data['libelle'])
-            || (!isset($data['nbPlace']) || !is_int($data['nbPlace']))
-            || !isset($data['equipementInfo'])
+            || !isset($data['nbPlace'])
             || !isset($data['batimentId'])
         ) {
             return false;

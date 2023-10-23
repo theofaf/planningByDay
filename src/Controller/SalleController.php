@@ -279,7 +279,7 @@ class SalleController extends AbstractController
 
         $salle = (new Salle())
             ->setLibelle($data['libelle'])
-            ->setEquipementInfo($data['equipementInfo'])
+            ->setEquipementInfo("")
             ->setNbPlace($data['nbPlace'])
         ;
 
