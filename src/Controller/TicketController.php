@@ -2,279 +2,379 @@
 
 namespace App\Controller;
 
+use App\Entity\Etablissement;
+use App\Entity\Statut;
+use App\Entity\Utilisateur;
+use App\Service\LogService;
+use DateTime;
+use Doctrine\ORM\EntityManagerInterface;
+use Exception;
+use FOS\RestBundle\Controller\Annotations as Rest;
+use Nelmio\ApiDocBundle\Annotation\Security;
+use OpenApi\Annotations as OA;
+use Nelmio\ApiDocBundle\Annotation\Model;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\SerializerInterface;
+use App\Entity\Ticket;
 
 class TicketController extends AbstractController
 {
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+        private readonly SerializerInterface $serializer,
+        private readonly LogService $logService,
+    ) {
+    }
+
     /**
-     * Créer un nouveau ticket.
-     *
-     * @Route("/tickets", methods={"POST"})
-     *
-     * @SWG\Post(
-     *     path="/tickets",
-     *     summary="Créer un nouveau ticket.",
-     *     @SWG\Parameter(
-     *         name="sujet",
-     *         in="body",
-     *         @SWG\Schema(type="string"),
-     *         description="Sujet du ticket"
+     * @OA\Get(
+     *     path="/api/tickets",
+     *     tags={"Tickets"},
+     *     summary="Récupère les tickets",
+     *     @OA\Response(
+     *          response=200,
+     *          description="Les tickets sont retournés",
+     *          @OA\JsonContent(
+     *              type="array",
+     *              @OA\Items(ref=@Model(type=Ticket::class, groups={"ticket"}))
+     *          )
      *     ),
-     *     @SWG\Parameter(
-     *         name="message",
-     *         in="body",
-     *         @SWG\Schema(type="string"),
-     *         description="Message du ticket"
-     *     ),
-     *     @SWG\Parameter(
-     *         name="statut_id",
-     *         in="body",
-     *         @SWG\Schema(type="integer"),
-     *         description="ID du statut du ticket"
-     *     ),
-     *     @SWG\Parameter(
-     *         name="utilisateur_id",
-     *         in="body",
-     *         @SWG\Schema(type="integer"),
-     *         description="ID de l'utilisateur du ticket"
-     *     ),
-     *     @SWG\Parameter(
-     *         name="etablissement_id",
-     *         in="body",
-     *         @SWG\Schema(type="integer"),
-     *         description="ID de l'établissement du ticket"
-     *     ),
-     *     @SWG\Response(
-     *         response=201,
-     *         description="Ticket créé avec succès"
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur technique"
      *     )
      * )
+     *
+     * @Rest\Get("/api/tickets")
+     * @Security(name="Bearer")
      */
-    public function createTicket(Request $request): JsonResponse
+    public function getTickets(): JsonResponse
+    {
+        try {
+            $tickets = $this->em->getRepository(Ticket::class)->findAll();
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des tickets a échoué", $exception);
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        $ticketSerialize = $this->serializer->serialize($tickets, 'json', ['groups' => 'ticket']);
+        return new JsonResponse($ticketSerialize, Response::HTTP_OK);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/tickets/{ticketId}",
+     *     tags={"Tickets"},
+     *     summary="Récupère un ticket par ID",
+     *     @OA\Parameter(
+     *          name="ticketId",
+     *          @OA\Schema(type="integer"),
+     *          in="path",
+     *          required=true,
+     *          description="ID du ticket"
+     *      ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Le ticket est retourné",
+     *          @OA\JsonContent(
+     *                type="array",
+     *                @OA\Items(ref=@Model(type=Ticket::class, groups={"ticket"}))
+     *            )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur technique"
+     *     )
+     * )
+     *
+     * @Rest\Get("/api/tickets/{ticketId}")
+     * @Security(name="Bearer")
+     */
+    public function getTicketsParId(int $ticketId): JsonResponse
+    {
+        try {
+            $ticket = $this->em->getRepository(Ticket::class)->find($ticketId);
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération du ticket [$ticketId] a échoué", $exception);
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        $ticketSerialize = $this->serializer->serialize($ticket, 'json', ['groups' => 'ticket']);
+        return new JsonResponse($ticketSerialize, Response::HTTP_OK);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/tickets",
+     *     tags={"Tickets"},
+     *     summary="Créer un nouveau ticket",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Données du ticket à créer",
+     *         @OA\JsonContent(ref=@Model(type=Ticket::class, groups={"nelmio"}))
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Ticket créé avec succès",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(ref=@Model(type=Ticket::class, groups={"ticket"}))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Données invalides"
+     *     ),
+     *     @OA\Response(
+     *          response=500,
+     *          description="Erreur technique"
+     *      )
+     * )
+     *
+     * @Rest\Post("/api/tickets")
+     * @Security(name="Bearer")
+     */
+    public function postTicket(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
-        $entityManager = $this->getDoctrine()->getManager();
-        $statutRepository = $entityManager->getRepository(Statut::class);
-        $utilisateurRepository = $entityManager->getRepository(Utilisateur::class);
-        $etablissementRepository = $entityManager->getRepository(Etablissement::class);
-
-        $statut = $statutRepository->find($data['statut_id']);
-        $utilisateur = $utilisateurRepository->find($data['utilisateur_id']);
-        $etablissement = $etablissementRepository->find($data['etablissement_id']);
-
-        if (!$statut || !$utilisateur || !$etablissement) {
-            return new JsonResponse(['message' => 'Statut, utilisateur ou établissement non trouvé'], JsonResponse::HTTP_NOT_FOUND);
+        if (
+            null === $data
+            || !isset($data['utilisateurId'])
+            || !isset($data['etablissementId'])
+            || !isset($data['sujet'])
+            || !isset($data['message'])
+        ) {
+            return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
         }
 
-        $ticket = new Ticket();
-        $ticket->setSujet($data['sujet']);
-        $ticket->setMessage($data['message']);
-        $ticket->setStatut($statut);
-        $ticket->setUtilisateur($utilisateur);
-        $ticket->setEtablissement($etablissement);
+        try {
+            $statut = $this->em->getRepository(Statut::class)->find(Statut::STATUT_PUBLIE_ID);
+            $utilisateur = $this->em->getRepository(Utilisateur::class)->find($data['utilisateurId']);
+            $etablissement = $this->em->getRepository(Etablissement::class)->find($data['etablissementId']);
 
-        $entityManager->persist($ticket);
-        $entityManager->flush();
+            if (!$statut) {
+                return new JsonResponse(['message' => 'Statut non trouvé'], Response::HTTP_NOT_FOUND);
+            }
 
-        return new JsonResponse(['message' => 'Ticket créé avec succès', 'ticket' => $ticket->toArray()], JsonResponse::HTTP_CREATED);
+            if (!$utilisateur) {
+                return new JsonResponse(['message' => 'utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
+            }
+
+            if (!$etablissement) {
+                return new JsonResponse(['message' => 'Établissement non trouvé'], Response::HTTP_NOT_FOUND);
+            }
+
+            $ticket = (new Ticket())
+                ->setSujet($data['sujet'])
+                ->setMessage($data['message'])
+                ->setStatut($statut)
+                ->setUtilisateur($utilisateur)
+                ->setEtablissement($etablissement)
+                ->setDateEnvoi(new DateTime())
+            ;
+            $this->em->persist($ticket);
+            $this->em->flush();
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La création du ticket a échoué", $exception);
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        $ticketSerialize = $this->serializer->serialize($ticket, 'json', ['groups' => 'ticket']);
+        return new JsonResponse(['message' => 'Abonnement créé avec succès' , 'ticket' => $ticketSerialize], Response::HTTP_CREATED);
     }
+
     /**
-     * Mettre à jour un ticket par ID.
-     *
-     * @Route("/tickets/{id}", methods={"PUT"})
-     *
-     * @SWG\Put(
-     *     path="/tickets/{id}",
-     *     summary="Mettre à jour un ticket par ID.",
-     *     @SWG\Parameter(
-     *         name="id",
+     * @OA\Put(
+     *     path="/api/tickets/{ticketId}",
+     *     tags={"Tickets"},
+     *     summary="Mettre à jour les détails d'un ticket par ID",
+     *     @OA\Parameter(
+     *         name="ticketId",
+     *         @OA\Schema(type="integer"),
      *         in="path",
-     *         type="integer",
+     *         required=true,
      *         description="ID du ticket"
      *     ),
-     *     @SWG\Parameter(
-     *         name="sujet",
-     *         in="body",
-     *         @SWG\Schema(type="string"),
-     *         description="Nouveau sujet du ticket"
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Données du ticket à mettre à jour",
+     *         @OA\JsonContent(ref=@Model(type=Ticket::class, groups={"nelmio"}))
      *     ),
-     *     @SWG\Parameter(
-     *         name="message",
-     *         in="body",
-     *         @SWG\Schema(type="string"),
-     *         description="Nouveau message du ticket"
-     *     ),
-     *     @SWG\Response(
+     *     @OA\Response(
      *         response=200,
-     *         description="Ticket mis à jour avec succès"
-     *     )
+     *         description="Ticket mis à jour avec succès",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(ref=@Model(type=Ticket::class, groups={"ticket"}))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Données invalides"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Ticket ou statut non trouvé"
+     *     ),
+     *     @OA\Response(
+     *          response=500,
+     *          description="Erreur technique"
+     *      )
      * )
+     *
+     * @Rest\Put("/api/tickets/{ticketId}")
+     * @Security(name="Bearer")
      */
-    public function updateTicket(int $id, Request $request): JsonResponse
+    public function putTicket(int $ticketId, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
-        $entityManager = $this->getDoctrine()->getManager();
-        $ticketRepository = $entityManager->getRepository(Ticket::class);
-        $ticket = $ticketRepository->find($id);
-
-        if (!$ticket) {
-            return new JsonResponse(['message' => 'Ticket non trouvé'], JsonResponse::HTTP_NOT_FOUND);
+        if (
+            null === $data || (
+                !isset($data['sujet'])
+                && !isset($data['message'])
+                && !isset($data['statutId'])
+            )
+        ) {
+            return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
         }
 
-        $ticket->setSujet($data['sujet']);
-        $ticket->setMessage($data['message']);
-        $entityManager->flush();
+        try {
+            $ticket = $this->em->getRepository(Ticket::class)->find($ticketId);
+            if (!$ticket) {
+                return new JsonResponse(['message' => 'Ticket non trouvé'], Response::HTTP_NOT_FOUND);
+            }
 
-        return new JsonResponse(['message' => 'Ticket mis à jour avec succès', 'ticket' => $ticket->toArray()], JsonResponse::HTTP_OK);
+            if (isset($data['message'])) {
+                $ticket->setSujet($data['message']);
+            }
+
+            if (isset($data['sujet'])) {
+                $ticket->setSujet($data['sujet']);
+            }
+
+            if (isset($data['statutId'])) {
+                $statut = $this->em->getRepository(Statut::class)->find($data['statutId']);
+
+                if (!$statut) {
+                    return new JsonResponse(['message' => 'Statut non trouvé'], Response::HTTP_NOT_FOUND);
+                }
+
+                $ticket->setStatut($statut);
+            }
+            $this->em->flush();
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La modification du ticket [$ticketId] a échoué", $exception);
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        $ticketSerialize = $this->serializer->serialize($ticket, 'json', ['groups' => 'ticket']);
+        return new JsonResponse(['message' => 'Ticket mis à jour avec succès', 'ticket' => $ticketSerialize], Response::HTTP_OK);
     }
+
     /**
-     * Récupérer un ticket par ID.
-     *
-     * @Route("/tickets/{id}", methods={"GET"})
-     *
-     * @SWG\Get(
-     *     path="/tickets/{id}",
-     *     summary="Récupérer un ticket par ID.",
-     *     @SWG\Parameter(
-     *         name="id",
-     *         in="path",
-     *         type="integer",
-     *         description="ID du ticket à récupérer"
+     * @OA\Get(
+     *     path="/api/tickets/etablissement/{etablissementId}",
+     *     tags={"Tickets"},
+     *     summary="Récupère les tickets d'un établissement",
+     *     @OA\Parameter(
+     *          name="etablissementId",
+     *          @OA\Schema(type="integer"),
+     *          in="path",
+     *          required=true,
+     *          description="ID de l'établissement"
+     *      ),
+     *     @OA\Response(
+     *           response=200,
+     *           description="La liste des tickets d'un établissement est retournée",
+     *           @OA\JsonContent(
+     *               type="array",
+     *               @OA\Items(ref=@Model(type=Ticket::class, groups={"ticket"}))
+     *           )
+     *      ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="L'établissement n'a pas été trouvé"
      *     ),
-     *     @SWG\Response(
-     *         response=200,
-     *         description="Ticket récupéré avec succès"
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur technique"
      *     )
      * )
-     */
-    public function getTicket(int $id): JsonResponse
-    {
-        $entityManager = $this->getDoctrine()->getManager();
-        $ticketRepository = $entityManager->getRepository(Ticket::class);
-        $ticket = $ticketRepository->find($id);
-
-        if (!$ticket) {
-            return new JsonResponse(['message' => 'Ticket non trouvé'], JsonResponse::HTTP_NOT_FOUND);
-        }
-
-        return new JsonResponse($ticket->toArray(), JsonResponse::HTTP_OK);
-    }
-    /**
-     * Récupérer tous les tickets.
      *
-     * @Route("/tickets", methods={"GET"})
-     *
-     * @SWG\Get(
-     *     path="/tickets",
-     *     summary="Récupérer tous les tickets.",
-     *     @SWG\Response(
-     *         response=200,
-     *         description="Tickets récupérés avec succès"
-     *     )
-     * )
-     */
-    public function getAllTickets(): JsonResponse
-    {
-        $entityManager = $this->getDoctrine()->getManager();
-        $ticketRepository = $entityManager->getRepository(Ticket::class);
-        $tickets = $ticketRepository->findAll();
-
-        $ticketsData = [];
-
-        foreach ($tickets as $ticket) {
-            $ticketsData[] = $ticket->toArray();
-        }
-
-        return new JsonResponse($ticketsData, JsonResponse::HTTP_OK);
-    }
-    /**
-     * Récupérer tous les tickets faits par un établissement.
-     *
-     * @Route("/etablissements/{etablissementId}/tickets", methods={"GET"})
-     *
-     * @SWG\Get(
-     *     path="/etablissements/{etablissementId}/tickets",
-     *     summary="Récupérer tous les tickets faits par un établissement.",
-     *     @SWG\Parameter(
-     *         name="etablissementId",
-     *         in="path",
-     *         type="integer",
-     *         description="ID de l'établissement"
-     *     ),
-     *     @SWG\Response(
-     *         response=200,
-     *         description="Tickets récupérés avec succès"
-     *     )
-     * )
+     * @Rest\Get("/api/tickets/etablissement/{etablissementId}")
+     * @Security(name="Bearer")
      */
     public function getTicketsByEtablissement(int $etablissementId): JsonResponse
     {
-        $entityManager = $this->getDoctrine()->getManager();
-        $etablissementRepository = $entityManager->getRepository(Etablissement::class);
-        $etablissement = $etablissementRepository->find($etablissementId);
+        try {
+            $etablissement = $this->em->getRepository(Etablissement::class)->find($etablissementId);
 
-        if (!$etablissement) {
-            return new JsonResponse(['message' => 'Établissement non trouvé'], JsonResponse::HTTP_NOT_FOUND);
+            if (!$etablissement) {
+                return new JsonResponse(['message' => "L'établissement n'existe pas"], Response::HTTP_NOT_FOUND);
+            }
+
+            $tickets = $this->em->getRepository(Ticket::class)->findBy(['etablissement' => $etablissement->getId()]);
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des tickets de l'établissement [$etablissementId] a échoué", $exception);
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        $ticketRepository = $entityManager->getRepository(Ticket::class);
-        $tickets = $ticketRepository->findBy(['etablissement' => $etablissement]);
-
-        $ticketsData = [];
-
-        foreach ($tickets as $ticket) {
-            $ticketsData[] = $ticket->toArray();
-        }
-
-        return new JsonResponse($ticketsData, JsonResponse::HTTP_OK);
+        return new JsonResponse($this->serializer->serialize($tickets, 'json', ['groups' => 'ticket']), Response::HTTP_OK);
     }
+
     /**
-     * Récupérer un ticket fait par un établissement.
-     *
-     * @Route("/etablissements/{etablissementId}/tickets/{ticketId}", methods={"GET"})
-     *
-     * @SWG\Get(
-     *     path="/etablissements/{etablissementId}/tickets/{ticketId}",
-     *     summary="Récupérer un ticket fait par un établissement.",
-     *     @SWG\Parameter(
-     *         name="etablissementId",
-     *         in="path",
-     *         type="integer",
-     *         description="ID de l'établissement"
+     * @OA\Get(
+     *     path="/api/tickets/utilisateur/{utilisateurId}",
+     *     tags={"Tickets"},
+     *     summary="Récupère les tickets d'un utilisateur",
+     *     @OA\Parameter(
+     *          name="utilisateurId",
+     *          @OA\Schema(type="integer"),
+     *          in="path",
+     *          required=true,
+     *          description="ID de l'utilisateur"
+     *      ),
+     *     @OA\Response(
+     *           response=200,
+     *           description="La liste des tickets d'un utilisateur est retournée",
+     *           @OA\JsonContent(
+     *               type="array",
+     *               @OA\Items(ref=@Model(type=Ticket::class, groups={"ticket"}))
+     *           )
+     *      ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="L'utilisateur n'a pas été trouvé"
      *     ),
-     *     @SWG\Parameter(
-     *         name="ticketId",
-     *         in="path",
-     *         type="integer",
-     *         description="ID du ticket à récupérer"
-     *     ),
-     *     @SWG\Response(
-     *         response=200,
-     *         description="Ticket récupéré avec succès"
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur technique"
      *     )
      * )
+     *
+     * @Rest\Get("/api/tickets/utilisateur/{utilisateurId}")
+     * @Security(name="Bearer")
      */
-    public function getTicketByEtablissement(int $etablissementId, int $ticketId): JsonResponse
+    public function getTicketsByUtilisateur(int $utilisateurId): JsonResponse
     {
-        $entityManager = $this->getDoctrine()->getManager();
-        $etablissementRepository = $entityManager->getRepository(Etablissement::class);
-        $etablissement = $etablissementRepository->find($etablissementId);
+        try {
+            $utilisateur = $this->em->getRepository(Utilisateur::class)->find($utilisateurId);
 
-        if (!$etablissement) {
-            return new JsonResponse(['message' => 'Établissement non trouvé'], JsonResponse::HTTP_NOT_FOUND);
+            if (!$utilisateur) {
+                return new JsonResponse(['message' => "L'utilisateur n'existe pas"], Response::HTTP_NOT_FOUND);
+            }
+
+            $tickets = $this->em->getRepository(Ticket::class)->findBy(['utilisateur' => $utilisateur->getId()]);
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des tickets de l'utilisateur [$utilisateurId] a échoué", $exception);
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        $ticketRepository = $entityManager->getRepository(Ticket::class);
-        $ticket = $ticketRepository->findOneBy(['etablissement' => $etablissement, 'id' => $ticketId]);
-
-        if (!$ticket) {
-            return new JsonResponse(['message' => 'Ticket non trouvé pour cet établissement'], JsonResponse::HTTP_NOT_FOUND);
-        }
-
-        return new JsonResponse($ticket->toArray(), JsonResponse::HTTP_OK);
+        return new JsonResponse($this->serializer->serialize($tickets, 'json', ['groups' => 'ticket']), Response::HTTP_OK);
     }
 }

@@ -2,104 +2,196 @@
 
 namespace App\Controller;
 
+use App\Entity\Abonnement;
+use App\Entity\Etablissement;
+use App\Service\LogService;
+use DateTime;
+use Doctrine\ORM\EntityManagerInterface;
+use Exception;
+use FOS\RestBundle\Controller\Annotations as Rest;
+use Nelmio\ApiDocBundle\Annotation\Security;
+use OpenApi\Annotations as OA;
+use Nelmio\ApiDocBundle\Annotation\Model;
+use Nelmio\ApiDocBundle\Annotation\Operation;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class AbonnementController extends AbstractController
 {
-
-    private $abonnementRepository;
-    private $entityManager;
-
-    public function __construct(AbonnementRepository $abonnementRepository, EntityManagerInterface $entityManager)
-    {
-        $this->abonnementRepository = $abonnementRepository;
-        $this->entityManager = $entityManager;
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+        private readonly SerializerInterface $serializer,
+        private readonly LogService $logService,
+    ) {
     }
 
     /**
-     * @Route("/", name="list_abonnements", methods={"GET"})
-     *
-     * @Nelmio\ApiDoc(
-     *     security=false,
-     *     output=Abonnement::class,
-     *     statusCodes={
-     *         200="Returned when successful",
-     *     }
+     * @OA\Get(
+     *     path="/api/abonnements",
+     *     tags={"Abonnements"},
+     *     summary="Récupère les abonnements",
+     *     @OA\Response(
+     *          response=200,
+     *          description="Les abonnements sont retournés",
+     *          @OA\JsonContent(
+     *              type="array",
+     *              @OA\Items(ref=@Model(type=Abonnement::class, groups={"nelmio"}))
+     *          )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur technique"
+     *     )
      * )
-     */
-    public function listAbonnements(AbonnementRepository $abonnementRepository): JsonResponse
-    {
-     
-        $abonnements = $abonnementRepository->findAll();
-
- 
-        return $this->json($abonnements, JsonResponse::HTTP_OK, [], ['groups' => ['full']]);
-    }
-    
-    /**
-     * @Route("", methods={"POST"})
      *
+     * @Rest\Get("/api/abonnements")
+     * @Security(name="Bearer")
+     */
+    public function getAbonnements(): JsonResponse
+    {
+        try {
+            $abonnements = $this->em->getRepository(Abonnement::class)->findAll();
+        } catch (Exception $e) {
+            $this->logService->insererLog("La récupération des abonnements a échoué.", $e);
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return $this->json($abonnements, Response::HTTP_OK);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/abonnements/{abonnementId}",
+     *     tags={"Abonnements"},
+     *     summary="Récupère un abonnement par ID",
+     *     @OA\Parameter(
+     *          name="abonnementId",
+     *          @OA\Schema(type="integer"),
+     *          in="path",
+     *          required=true,
+     *          description="ID de l'abonnement"
+     *      ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="L'abonnement est retourné",
+     *          @OA\JsonContent(
+     *               type="object",
+     *               @OA\Property(property="id", type="integer"),
+     *               @OA\Property(property="libelle", type="string"),
+     *               @OA\Property(property="libelle_technique", type="string"),
+     *               @OA\Property(property="prix", type="number")
+     *           )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erreur technique"
+     *     )
+     * )
+     *
+     * @Rest\Get("/api/abonnements/{abonnementId}")
+     * @Security(name="Bearer")
+     */
+    public function getAbonnementParId(int $abonnementId): JsonResponse
+    {
+       try {
+            $abonnement = $this->em->getRepository(Abonnement::class)->find($abonnementId);
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération de l'abonnement avec l'id [$abonnementId] a échoué", $exception);
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return $this->json($abonnement, Response::HTTP_OK);
+    }
+
+    /**
      * @OA\Post(
-     *     path="/abonnements",
+     *     path="/api/abonnements",
      *     tags={"Abonnements"},
      *     summary="Créer un nouvel abonnement",
      *     @OA\RequestBody(
-     *         @Model(type=AbonnementType::class)
+     *         required=true,
+     *         description="Données de l'abonnement à créer",
+     *         @OA\JsonContent(ref=@Model(type=Abonnement::class, groups={"nelmio"}))
      *     ),
      *     @OA\Response(
      *         response=201,
-     *         description="Abonnement créé avec succès"
+     *         description="Abonnement créé avec succès",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(ref=@Model(type=Abonnement::class, groups={"nelmio"}))
+     *         )
      *     ),
      *     @OA\Response(
      *         response=400,
      *         description="Données invalides"
-     *     )
+     *     ),
+     *     @OA\Response(
+     *          response=500,
+     *          description="Erreur technique"
+     *      )
      * )
      *
-     * @param Request $request
-     * @return JsonResponse
+     * @Rest\Post("/api/abonnements")
+     * @Security(name="Bearer")
      */
-    public function createAbonnement(Request $request): JsonResponse
+    public function postAbonnement(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        
- 
-        $abonnement = new Abonnement();
-        
-    
-        $abonnement->setLibelle($data['libelle']);
-        $abonnement->setLibelleTechnique($data['libelle_technique']);
-        $abonnement->setPrix($data['prix']);
-        
-        // Enregistrez l'abonnement dans la base de données
-        $entityManager = $this->getDoctrine()->getManager();
-        $entityManager->persist($abonnement);
-        $entityManager->flush();
-        
-        return new JsonResponse(['message' => 'Abonnement créé avec succès'], JsonResponse::HTTP_CREATED);
+
+        if (
+            null === $data
+            || !isset($data['libelle'])
+            || !isset($data['libelle_technique'])
+            || !isset($data['prix'])
+        ) {
+            return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $abonnement = (new Abonnement())
+            ->setLibelle($data['libelle'])
+            ->setLibelleTechnique($data['libelle_technique'])
+            ->setPrix($data['prix'])
+        ;
+
+        try {
+            $this->em->persist($abonnement);
+            $this->em->flush();
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La création de l'abonnement a échoué", $exception);
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        $abonnementSerialize = $this->serializer->serialize($abonnement, 'json', ['groups' => 'abonnement']);
+        return new JsonResponse(['message' => 'Abonnement créé avec succès' , 'abonnement' => $abonnementSerialize], Response::HTTP_CREATED);
     }
 
     /**
-     * @Route("/abonnements/{id}", methods={"PUT"})
-     *
      * @OA\Put(
-     *     path="/abonnements/{id}",
+     *     path="/api/abonnements/{abonnementId}",
      *     tags={"Abonnements"},
      *     summary="Mettre à jour les détails d'un abonnement par ID",
      *     @OA\Parameter(
-     *         name="id",
+     *         name="abonnementId",
+     *         @OA\Schema(type="integer"),
      *         in="path",
      *         required=true,
      *         description="ID de l'abonnement"
      *     ),
      *     @OA\RequestBody(
-     *         @Model(type=AbonnementType::class)
+     *         required=true,
+     *         description="Données de l'abonnement à mettre à jour",
+     *         @OA\JsonContent(ref=@Model(type=Abonnement::class, groups={"nelmio"}))
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Abonnement mis à jour avec succès"
+     *         description="Abonnement mis à jour avec succès",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(ref=@Model(type=Abonnement::class, groups={"nelmio"}))
+     *         )
      *     ),
      *     @OA\Response(
      *         response=400,
@@ -108,144 +200,179 @@ class AbonnementController extends AbstractController
      *     @OA\Response(
      *         response=404,
      *         description="Abonnement non trouvé"
-     *     )
+     *     ),
+     *     @OA\Response(
+     *          response=500,
+     *          description="Erreur technique"
+     *      )
      * )
      *
-     * @param int $id
-     * @param Request $request
-     * @return JsonResponse
+     * @Rest\Put("/api/abonnements/{abonnementId}")
+     * @Security(name="Bearer")
      */
-    public function updateAbonnement(int $id, Request $request): JsonResponse
+    public function putAbonnement(int $abonnementId, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        $entityManager = $this->getDoctrine()->getManager();
-        $abonnement = $entityManager->getRepository(Abonnement::class)->find($id);
-        
-        if (!$abonnement) {
-            return new JsonResponse(['message' => 'Abonnement non trouvé'], JsonResponse::HTTP_NOT_FOUND);
+
+        if (
+            null === $data
+            || !isset($data['libelle'])
+            || !isset($data['libelle_technique'])
+            || !isset($data['prix'])
+        ) {
+            return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
         }
-        
-      
-        $abonnement->setLibelle($data['libelle']);
-        $abonnement->setLibelleTechnique($data['libelle_technique']);
-        $abonnement->setPrix($data['prix']);
-        
-        $entityManager->flush();
-        
-        return new JsonResponse(['message' => 'Abonnement mis à jour avec succès'], JsonResponse::HTTP_OK);
+
+        try {
+            $abonnement = $this->em->getRepository(Abonnement::class)->find($abonnementId);
+            if (!$abonnement) {
+                return new JsonResponse(['message' => 'Abonnement non trouvé'], Response::HTTP_NOT_FOUND);
+            }
+
+            $abonnement
+                ->setLibelle($data['libelle'])
+                ->setLibelleTechnique($data['libelle_technique'])
+                ->setPrix($data['prix'])
+            ;
+
+            $this->em->flush();
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La modification de l'abonnement a échoué", $exception);
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        $abonnementSerialize = $this->serializer->serialize($abonnement, 'json', ['groups' => 'abonnement']);
+        return new JsonResponse(['message' => 'Abonnement mis à jour avec succès', 'abonnement' => $abonnementSerialize], Response::HTTP_OK);
     }
+
     /**
-     * @Route("/abonnements/{id}", methods={"DELETE"})
-     *
      * @OA\Delete(
-     *     path="/abonnements/{id}",
+     *     path="/api/abonnements/{abonnementId}",
      *     tags={"Abonnements"},
      *     summary="Supprimer un abonnement par ID",
      *     @OA\Parameter(
-     *         name="id",
+     *         name="abonnementId",
+     *         @OA\Schema(type="integer"),
      *         in="path",
      *         required=true,
-     *         description="ID de l'abonnement"
+     *         description="ID de l'abonnement à supprimer"
      *     ),
      *     @OA\Response(
-     *         response=200,
+     *         response=204,
      *         description="Abonnement supprimé avec succès"
      *     ),
      *     @OA\Response(
      *         response=404,
      *         description="Abonnement non trouvé"
-     *     )
+     *     ),
+     *     @OA\Response(
+     *          response=500,
+     *          description="Erreur technique"
+     *      )
      * )
-     *
-     * @param int $id
-     * @return JsonResponse
+     * @Rest\Delete("/api/abonnements/{abonnementId}")
+     * @Security(name="Bearer")
      */
-    public function deleteAbonnement(int $id): JsonResponse
+    public function deleteAbonnement(int $abonnementId): JsonResponse
     {
-        $entityManager = $this->getDoctrine()->getManager();
-        $abonnement = $entityManager->getRepository(Abonnement::class)->find($id);
-        
+        $abonnement = $this->em->getRepository(Abonnement::class)->find($abonnementId);
+
         if (!$abonnement) {
-            return new JsonResponse(['message' => 'Abonnement non trouvé'], JsonResponse::HTTP_NOT_FOUND);
+            return new JsonResponse(['message' => 'Abonnement non trouvé'], Response::HTTP_NOT_FOUND);
         }
-        
-       
-        $entityManager->remove($abonnement);
-        $entityManager->flush();
-        
-        return new JsonResponse(['message' => 'Abonnement supprimé avec succès'], JsonResponse::HTTP_OK);
+
+        try {
+            $this->em->remove($abonnement);
+            $this->em->flush();
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La suppression de l'abonnement a échoué", $exception);
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return new JsonResponse(['message' => 'Abonnement supprimé avec succès'], Response::HTTP_NO_CONTENT);
     }
 
     /**
-     * @Route("/subscribe/{etablissementId}/{abonnementId}", methods={"POST"})
-     *
-     * @OA\Post(
-     *     path="/abonnements/subscribe/{etablissementId}/{abonnementId}",
+     * @OA\Patch(
+     *     path="/api/abonnements/subscribe/{etablissementId}/{abonnementId}",
      *     tags={"Abonnements"},
      *     summary="Souscrire un abonnement pour un établissement",
      *     @OA\Parameter(
      *         name="etablissementId",
+     *         @OA\Schema(type="integer"),
      *         in="path",
      *         required=true,
      *         description="ID de l'établissement"
      *     ),
      *     @OA\Parameter(
      *         name="abonnementId",
+     *         @OA\Schema(type="integer"),
      *         in="path",
      *         required=true,
      *         description="ID de l'abonnement"
      *     ),
      *     @OA\Response(
-     *         response=201,
+     *         response=200,
      *         description="Abonnement souscrit avec succès"
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Établissement déjà abonné ou données invalides"
      *     ),
      *     @OA\Response(
      *         response=404,
      *         description="Établissement ou abonnement non trouvé"
-     *     )
+     *     ),
+     *     @OA\Response(
+     *          response=500,
+     *          description="Erreur technique"
+     *      )
      * )
      *
-     * @param int $etablissementId
-     * @param int $abonnementId
-     * @param AbonnementRepository $abonnementRepository
-     * @return JsonResponse
+     * @Rest\Patch("/api/abonnements/subscribe/{etablissementId}/{abonnementId}")
+     * @Security(name="Bearer")
      */
-    public function subscribeAbonnement(Etablissement $etablissement, int $abonnementId): JsonResponse
+    public function subscribeAbonnement(int $etablissementId, int $abonnementId): JsonResponse
     {
-      
-        $abonnement = $this->abonnementRepository->find($abonnementId);
+        $abonnement = $this->em->getRepository(Abonnement::class)->find($abonnementId);
+        $etablissement = $this->em->getRepository(Etablissement::class)->find($etablissementId);
 
-        
         if (!$abonnement) {
-            return new JsonResponse(['message' => 'Abonnement non trouvé'], JsonResponse::HTTP_NOT_FOUND);
+            return new JsonResponse(['message' => 'Abonnement non trouvé'], Response::HTTP_NOT_FOUND);
         }
 
-        // Assurez-vous que l'établissement n'a pas déjà souscrit à un abonnement
+        if (!$etablissement) {
+            return new JsonResponse(['message' => 'Etablissement non trouvé'], Response::HTTP_NOT_FOUND);
+        }
+
         if ($etablissement->getAbonnement() !== null) {
-            return new JsonResponse(['message' => 'L\'établissement a déjà souscrit à un abonnement'], JsonResponse::HTTP_BAD_REQUEST);
+            return new JsonResponse(['message' => 'L\'établissement a déjà souscrit à un abonnement'], Response::HTTP_BAD_REQUEST);
         }
 
-        
-        $etablissement->setAbonnement($abonnement);
+        $etablissement
+            ->setAbonnement($abonnement)
+            ->setDateAbonnement(new DateTime())
+            ->setStatutAbonnement(true)
+        ;
 
-     
-        $etablissement->setDateAbonnement(new \DateTime());
+        try {
+            $this->em->flush();
+        } catch (Exception $exception) {
+            $this->logService->insererLog("L'inscription à l'abonnement [$abonnementId] pour l'établissement [$etablissementId] a échoué", $exception);
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
 
-        $etablissement->setStatutAbonnement(true);
-
-        $this->entityManager->flush();
-
-        return new JsonResponse(['message' => 'Abonnement souscrit avec succès'], JsonResponse::HTTP_CREATED);
+        return new JsonResponse(['message' => 'Abonnement souscrit avec succès'], Response::HTTP_OK);
     }
+
     /**
-     * @Route("/cancel/{etablissementId}/{abonnementId}", methods={"DELETE"})
-     *
-     * @OA\Delete(
-     *     path="/abonnements/cancel/{etablissementId}/{abonnementId}",
+     * @OA\Patch(
+     *     path="/api/abonnements/cancel/{etablissementId}/{abonnementId}",
      *     tags={"Abonnements"},
      *     summary="Annuler un abonnement pour un établissement",
      *     @OA\Parameter(
      *         name="etablissementId",
+     *         @OA\Schema(type="integer"),
      *         in="path",
      *         required=true,
      *         description="ID de l'établissement"
@@ -261,34 +388,51 @@ class AbonnementController extends AbstractController
      *         description="Abonnement annulé avec succès"
      *     ),
      *     @OA\Response(
-     *         response=404,
-     *         description="Établissement ou abonnement non trouvé"
-     *     )
+     *         response=400,
+     *         description="L'établissement ne possède pas d'abonnement"
+     *     ),
+     *     @OA\Response(
+     *          response=404,
+     *          description="Établissement ou abonnement non trouvé"
+     *      ),
+     *     @OA\Response(
+     *          response=500,
+     *          description="Erreur technique"
+     *      )
      * )
-     *
-     * @param int $etablissementId
-     * @param int $abonnementId
-     * @param AbonnementRepository $abonnementRepository
-     * @return JsonResponse
+     * @Rest\Patch("/api/abonnements/cancel/{etablissementId}/{abonnementId}")
+     * @Security(name="Bearer")
      */
-    public function cancelAbonnement(Etablissement $etablissement): JsonResponse
+    public function cancelAbonnement(int $etablissementId, int $abonnementId): JsonResponse
     {
-       
-        $abonnement = $etablissement->getAbonnement();
+        $abonnement = $this->em->getRepository(Abonnement::class)->find($abonnementId);
+        $etablissement = $this->em->getRepository(Etablissement::class)->find($etablissementId);
 
         if (!$abonnement) {
-            return new JsonResponse(['message' => 'L\'établissement n\'a pas d\'abonnement actif'], JsonResponse::HTTP_BAD_REQUEST);
+            return new JsonResponse(['message' => 'Abonnement non trouvé'], Response::HTTP_NOT_FOUND);
         }
 
-        $etablissement->setAbonnement(null);
+        if (!$etablissement) {
+            return new JsonResponse(['message' => 'Etablissement non trouvé'], Response::HTTP_NOT_FOUND);
+        }
 
-        $etablissement->setDateAbonnement(null);
+        if ($etablissement->getAbonnement() === null) {
+            return new JsonResponse(['message' => 'L\'établissement ne possède aucun abonnement'], Response::HTTP_BAD_REQUEST);
+        }
 
-        $etablissement->setStatutAbonnement(false);
+        $etablissement
+            ->setAbonnement(null)
+            ->setDateAbonnement(null)
+            ->setStatutAbonnement(false)
+        ;
 
-        $this->entityManager->flush();
+        try {
+            $this->em->flush();
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La désinscription à l'abonnement [$abonnementId] pour l'établissement [$etablissementId] a échoué", $exception);
+            return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
 
-        return new JsonResponse(['message' => 'Abonnement annulé avec succès'], JsonResponse::HTTP_OK);
+        return new JsonResponse(['message' => 'Abonnement annulé avec succès'], Response::HTTP_OK);
     }
-
 }

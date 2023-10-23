@@ -3,7 +3,10 @@
 namespace App\Repository;
 
 use App\Entity\ModuleFormation;
+use App\Entity\ModuleFormationUtilisateur;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -16,8 +19,17 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class ModuleFormationRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
-    {
+    public function __construct(ManagerRegistry $registry) {
         parent::__construct($registry, ModuleFormation::class);
+    }
+
+    public function getModulesParCursusId(int $cursusId)
+    {
+        $qb = $this->createQueryBuilder('m');
+        $qb
+            ->join('m.listeCursus', 'c', Join::WITH, 'c.id = :cursusId')
+            ->setParameter('cursusId', $cursusId)
+        ;
+        return $qb->getQuery()->getResult();
     }
 }

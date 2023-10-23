@@ -7,51 +7,67 @@ use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: EtablissementRepository::class)]
 class Etablissement
 {
+    public const REFERENCE_SANS_AFFECTION = 'Sans Affection';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["nelmio", "etablissement", "batiment", "utilisateur", "ticket"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 30)]
+    #[Groups(["nelmio", "etablissement", "utilisateur"])]
     private ?string $libelle = null;
 
     #[ORM\Column]
+    #[Groups(["nelmio", "etablissement"])]
     private ?int $numVoie = null;
 
     #[ORM\Column(length: 50)]
+    #[Groups(["nelmio", "etablissement"])]
     private ?string $rue = null;
 
     #[ORM\Column(length: 30)]
+    #[Groups(["nelmio", "etablissement"])]
     private ?string $ville = null;
 
     #[ORM\Column]
+    #[Groups(["nelmio", "etablissement"])]
     private ?int $codePostal = null;
 
     #[ORM\Column]
+    #[Groups(["nelmio", "etablissement"])]
     private ?string $numeroTel = null;
 
     #[ORM\Column]
+    #[Groups(["nelmio", "etablissement"])]
     private ?bool $statutAbonnement = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    #[Groups(["nelmio", "etablissement"])]
     private ?DateTimeInterface $dateAbonnement = null;
 
     #[ORM\ManyToOne]
+    #[Groups(["nelmio", "etablissement"])]
     private ?Abonnement $abonnement = null;
     
-    #[ORM\OneToMany(mappedBy: 'etablissement', targetEntity: Ticket::class)]
+    #[ORM\OneToMany(mappedBy: 'etablissement', targetEntity: Ticket::class, cascade: ['remove'])]
+    #[Groups(["nelmio", "etablissement"])]
     /** @var ArrayCollection $tickets */
     private $tickets;
 
-    #[ORM\OneToMany(mappedBy: 'etablissement', targetEntity: Batiment::class)]
+    #[ORM\OneToMany(mappedBy: 'etablissement', targetEntity: Batiment::class, cascade: ['remove'])]
+    #[Groups(["nelmio", "etablissement"])]
     /** @var ArrayCollection $batiments */
     private $batiments;
 
     #[ORM\OneToMany(mappedBy: 'etablissement', targetEntity: Utilisateur::class)]
+    #[Groups(["nelmio", "etablissement"])]
     /** @var ArrayCollection $utilisateurs */
     private $utilisateurs;
 

@@ -28,7 +28,7 @@ class SalleFixtures extends Fixture implements DependentFixtureInterface
             for ($i = 1; $i <= $this->faker->numberBetween(1, 20); $i++) {
                 $salle = (new Salle())
                     ->setBatiment($batiment)
-                    ->setLibelle('Salle ' . $i)
+                    ->setLibelle($this->faker->unique()->lastName())
                     ->setNbPlace($this->faker->numberBetween(75, 100))
                     ->setEquipementInfo($this->genererAleaEquipementInfo())
                 ;
