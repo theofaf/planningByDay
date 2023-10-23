@@ -20,4 +20,32 @@ class BatimentRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Batiment::class);
     }
+
+    public function findBatimentByFiltres(?string $libelle, ?string $ville, ?string $codePostal)
+    {
+        $qb = $this->createQueryBuilder('b');
+
+        if (null !== $libelle) {
+            $qb
+                ->andWhere($qb->expr()->like('b.libelle', ':libelle'))
+                ->setParameter('libelle', '%'.$libelle.'%')
+            ;
+        }
+
+        if (null !== $ville) {
+            $qb
+                ->andWhere($qb->expr()->like('b.ville', ':ville'))
+                ->setParameter('ville', '%'.$ville.'%')
+            ;
+        }
+
+        if (null !== $codePostal) {
+            $qb
+                ->andWhere($qb->expr()->like('b.codePostal', ':codePostal'))
+                ->setParameter('codePostal', '%'.$codePostal.'%')
+            ;
+        }
+
+        return $qb->getQuery()->getResult();
+    }
 }

@@ -7,6 +7,7 @@ use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: ModuleFormationRepository::class)]
 class ModuleFormation
@@ -14,19 +15,24 @@ class ModuleFormation
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["nelmio", "moduleFormation", "session", "ModuleFormationUtilisateur"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 30)]
+    #[Groups(["nelmio", "moduleFormation", "ModuleFormationUtilisateur", "session"])]
     private ?string $libelle = null;
 
     #[ORM\Column(type: Types::TIME_MUTABLE)]
+    #[Groups(["nelmio", "moduleFormation", "ModuleFormationUtilisateur"])]
     private ?DateTimeInterface $duree = null;
 
     #[ORM\ManyToMany(targetEntity: Cursus::class, inversedBy: 'moduleFormations')]
+    #[Groups(["nelmio", "moduleFormation"])]
     /** @var ArrayCollection $listeCursus */
     private $listeCursus;
 
-    #[ORM\OneToMany(mappedBy: 'moduleFormation', targetEntity: ModuleFormationUtilisateur::class, cascade: ['persist'])]
+    #[ORM\OneToMany(mappedBy: 'moduleFormation', targetEntity: ModuleFormationUtilisateur::class, cascade: ['persist', 'remove'])]
+    #[Groups(["nelmio"])]
     /** @var ArrayCollection $moduleFormationUtilisateurs */
     private $moduleFormationUtilisateurs;
 

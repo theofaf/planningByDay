@@ -34,6 +34,7 @@ class UtilisateurFixtures extends Fixture implements DependentFixtureInterface
     {
         $moduleReferences = ModuleFormationFixtures::LISTE_FORMATIONS_MODULES;
         $statuts = $this->statutRepository->findAll();
+        $nbRoles = count(Utilisateur::ROLES_POSSIBLE);
 
         foreach (EtablissementFixtures::LISTE_REFERENCES_ETABLISSEMENT as $etablissementReference) {
             /** @var Etablissement $etablissement */
@@ -45,11 +46,12 @@ class UtilisateurFixtures extends Fixture implements DependentFixtureInterface
                 $prenom = $this->faker->unique()->firstName;
                 $email = strtolower($prenom) . '.' . strtolower($nom) . '@dispostable.com';
 
+                $roleAlea = $this->faker->numberBetween(0, $nbRoles-1);
                 $utilisateur = new Utilisateur();
                 $utilisateur
                     ->setNom($nom)
                     ->setPrenom($prenom)
-                    ->setRoles(['ROLE_USER'])
+                    ->setRoles([Utilisateur::ROLES_POSSIBLE[$roleAlea]])
                     ->setEmail($email)
                     ->setPassword($this->passwordHasher->hashPassword($utilisateur, 'Azerty123*'))
                     ->setEtablissement($etablissement)

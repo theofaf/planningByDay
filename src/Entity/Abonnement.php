@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use App\Repository\AbonnementRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
+
 
 #[ORM\Entity(repositoryClass: AbonnementRepository::class)]
 class Abonnement
@@ -15,15 +17,19 @@ class Abonnement
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["nelmio", "abonnement", "etablissement"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 20)]
+    #[Groups(["nelmio", "abonnement"])]
     private ?string $libelle = null;
 
     #[ORM\Column(length: 20)]
+    #[Groups(["nelmio", "abonnement"])]
     private ?string $libelleTechnique = null;
 
     #[ORM\Column]
+    #[Groups(["nelmio", "abonnement"])]
     private ?float $prix = null;
 
     public function getId(): ?int
