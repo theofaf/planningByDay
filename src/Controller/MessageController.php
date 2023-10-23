@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Statut;
 use App\Entity\Utilisateur;
+use App\Service\LogService;
 use App\Service\MessageService;
 use Exception;
 use FOS\RestBundle\Controller\Annotations as Rest;
@@ -11,7 +12,6 @@ use Nelmio\ApiDocBundle\Annotation\Security;
 use OpenApi\Annotations as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\Message;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
@@ -27,6 +27,7 @@ class MessageController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly SerializerInterface $serializer,
         private readonly MessageService $serviceMessage,
+        private readonly LogService $logService,
     ) {
     }
 
@@ -98,8 +99,8 @@ class MessageController extends AbstractController
                 return $this->json($listeMessagesGroupes, Response::HTTP_OK);
             }
 
-        } catch (Exception $e) {
-            var_dump($e);
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des messages reçus pour l'utilisateur [$utilisateurId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -149,7 +150,8 @@ class MessageController extends AbstractController
             }
 
             $messagesEnvoyes = $this->em->getRepository(Message::class)->findBy(['emetteur' => $receveur->getId()]);
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des messages envoyés pour l'utilisateur [$utilisateurId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -199,9 +201,8 @@ class MessageController extends AbstractController
             return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
         }
 
-        $message = (new Message())->setContenu($data['contenu']);
-
         try {
+            $message = (new Message())->setContenu($data['contenu']);
             $receveur = $this->em->getRepository(Utilisateur::class)->find($data['receveurId']);
             $emetteur = $this->em->getRepository(Utilisateur::class)->find($data['emetteurId']);
             $statut = $this->em->getRepository(Statut::class)->find(Statut::STATUT_PUBLIE_ID);
@@ -217,7 +218,8 @@ class MessageController extends AbstractController
             ;
             $this->em->persist($message);
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La création du message a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -273,7 +275,8 @@ class MessageController extends AbstractController
 
             $message->setEstLu(boolval($data['estLu']));
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La modification du message [$messageId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 

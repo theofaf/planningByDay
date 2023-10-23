@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Service\LogService;
 use App\Service\UtilisateurService;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
@@ -27,6 +28,7 @@ class UtilisateurController extends AbstractController
         private readonly UtilisateurService $utilisateurService,
         private readonly SerializerInterface $serializer,
         private readonly UserPasswordHasherInterface  $passwordHasher,
+        private readonly LogService $logService,
     ) {
     }
 
@@ -56,7 +58,8 @@ class UtilisateurController extends AbstractController
     {
         try {
             $utilisateurs = $this->em->getRepository(Utilisateur::class)->findAll();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des utilisateurs a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -106,7 +109,8 @@ class UtilisateurController extends AbstractController
             }
 
             $utilisateurs = $this->em->getRepository(Utilisateur::class)->findBy(['etablissement' => $etablissement->getId()]);
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des utilisateurs del'établissement [$etablissementId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -154,7 +158,8 @@ class UtilisateurController extends AbstractController
             if (!$utilisateur) {
                 return new JsonResponse(['message' => 'Utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
             }
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération de l'utilisateur [$utilisateurId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -204,17 +209,17 @@ class UtilisateurController extends AbstractController
             return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
         }
 
-        $utilisateur = (new Utilisateur());
-        $utilisateur
-            ->setNom($data['nom'])
-            ->setPrenom($data['prenom'])
-            ->setEmail($data['email'])
-            ->setRoles([$data['roles']])
-            ->setPassword($this->passwordHasher->hashPassword($utilisateur, 'Azerty123*'))
-            ->setDateDerniereAction(new DateTime())
-        ;
-
         try {
+            $utilisateur = (new Utilisateur());
+            $utilisateur
+                ->setNom($data['nom'])
+                ->setPrenom($data['prenom'])
+                ->setEmail($data['email'])
+                ->setRoles([$data['roles']])
+                ->setPassword($this->passwordHasher->hashPassword($utilisateur, 'Azerty123*'))
+                ->setDateDerniereAction(new DateTime())
+            ;
+
             $etablissement = $this->em->getRepository(Etablissement::class)->find($data['etablissementId']);
             if (!$etablissement) {
                 return new JsonResponse(['message' => 'Établissement non trouvé'], Response::HTTP_NOT_FOUND);
@@ -223,8 +228,8 @@ class UtilisateurController extends AbstractController
             $utilisateur->setEtablissement($etablissement);
             $this->em->persist($utilisateur);
             $this->em->flush();
-        } catch (Exception $e) {
-            var_dump($e);
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La création de l'utilisateur a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -308,7 +313,8 @@ class UtilisateurController extends AbstractController
             ;
 
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La modification de l'utilisateur [$utilisateurId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -346,16 +352,16 @@ class UtilisateurController extends AbstractController
      */
     public function deleteUtilisateur(int $utilisateurId): JsonResponse
     {
-        $utilisateur = $this->em->getRepository(Utilisateur::class)->find($utilisateurId);
-
-        if (!$utilisateur) {
-            return new JsonResponse(['message' => 'Utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
-        }
-
         try {
+            $utilisateur = $this->em->getRepository(Utilisateur::class)->find($utilisateurId);
+
+            if (!$utilisateur) {
+                return new JsonResponse(['message' => 'Utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
+            }
             $this->em->remove($utilisateur);
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La suppression de l'utilisateur [$utilisateurId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 

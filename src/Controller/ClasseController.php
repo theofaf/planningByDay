@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Cursus;
+use App\Service\LogService;
 use App\Service\ServiceClasse;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
@@ -14,7 +15,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Nelmio\ApiDocBundle\Annotation\Model;
 
@@ -24,6 +24,7 @@ class ClasseController extends AbstractController
         private readonly ServiceClasse $serviceClasse,
         private readonly EntityManagerInterface $em,
         private readonly SerializerInterface $serializer,
+        private readonly LogService $logService,
     ) {
     }
 
@@ -70,12 +71,12 @@ class ClasseController extends AbstractController
             return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
         }
 
-        $classe = (new Classe())
-            ->setLibelle($data['libelle'])
-            ->setNombreEleves($data['nombreEleves'])
-        ;
-
         try {
+            $classe = (new Classe())
+                ->setLibelle($data['libelle'])
+                ->setNombreEleves($data['nombreEleves'])
+            ;
+
             $cursus = $this->em->getRepository(Cursus::class)->find($data['cursusId']);
             if (!$cursus) {
                 return new JsonResponse(['message' => 'Cursus non trouvé'], Response::HTTP_NOT_FOUND);
@@ -84,12 +85,13 @@ class ClasseController extends AbstractController
             $classe->setCursus($cursus);
             $this->em->persist($classe);
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La création de la classe a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        $batimentSerealize = $this->serializer->serialize($classe, 'json', ['groups' => 'classe']);
-        return new JsonResponse(['message' => 'Classe créé avec succès', 'batiment' => $batimentSerealize], Response::HTTP_CREATED);
+        $classeSerialize = $this->serializer->serialize($classe, 'json', ['groups' => 'classe']);
+        return new JsonResponse(['message' => 'Classe créé avec succès', 'classe' => $classeSerialize], Response::HTTP_CREATED);
     }
 
     /**
@@ -133,7 +135,8 @@ class ClasseController extends AbstractController
             if (!$classe) {
                 return new JsonResponse(['message' => 'Classe non trouvée'], Response::HTTP_NOT_FOUND);
             }
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération de la classe [$classeId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -196,7 +199,8 @@ class ClasseController extends AbstractController
                 ->setNombreEleves($data['nombreEleves'])
                 ->setCursus($cursus)
             ;
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La modification de la classe [$classeId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -245,7 +249,8 @@ class ClasseController extends AbstractController
         try {
             $this->em->remove($classe);
             $this->em->flush();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La suppression de la classe [$classeId] a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -278,7 +283,8 @@ class ClasseController extends AbstractController
     {
         try {
             $classes = $this->em->getRepository(Classe::class)->findAll();
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            $this->logService->insererLog("La récupération des classes a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
