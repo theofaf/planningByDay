@@ -297,7 +297,6 @@ class SessionController extends AbstractController
 
             if (!$this->serviceSession->isDataValide($data)) {
                 return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
-
             }
             $moduleFormation = $this->em->getRepository(ModuleFormation::class)->find($data['moduleFormationId']);
             $classe = $this->em->getRepository(Classe::class)->find($data['classeId']);
@@ -318,8 +317,7 @@ class SessionController extends AbstractController
                 ->setUtilisateur($utilisateur)
                 ->setClasse($classe)
                 ->setSalle($salle)
-                ->setStatut($statutAttente)
-            ;
+                ->setStatut($statutAttente);
 
             $this->em->persist($session);
             $this->em->flush();
@@ -473,7 +471,8 @@ class SessionController extends AbstractController
     public function patchSessionAcceptation(int $sessionId, int $utilisateurId, Request $request): JsonResponse
     {
         try {
-            $choix = boolval($request->query?->get('choix'));
+
+            $choix = $request->query?->get('choix');
             $session = $this->em->getRepository(Session::class)->find($sessionId);
             $utilisateur = $this->em->getRepository(Utilisateur::class)->find($utilisateurId);
 
@@ -486,7 +485,6 @@ class SessionController extends AbstractController
                 || null !== $session->getEstAcceptee()
             ) {
                 return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
-
             }
 
             $session->setEstAcceptee($choix);

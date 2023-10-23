@@ -51,7 +51,7 @@ class Session
     private ?Statut $statut = null;
 
     #[ORM\Column(nullable: true)]
-    #[Groups(["nelmio", "message"])]
+    #[Groups(["nelmio", "session", "message"])]
     private ?bool $estAcceptee = null;
 
     public function getId(): ?int
