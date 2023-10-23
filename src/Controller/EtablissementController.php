@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Utilisateur;
 use App\Service\EtablissementService;
 use App\Service\LogService;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use App\Entity\Etablissement;
@@ -291,12 +292,15 @@ class EtablissementController extends AbstractController
     public function getEtablissements(): JsonResponse
     {
         try {
-            $etablissement = $this->em->getRepository(Etablissement::class)->findAll();
+            $etablissements = $this->em->getRepository(Etablissement::class)->findAll();
+            $listeEtablissements = new ArrayCollection($etablissements);
+            $listeEtablissements->removeElement($etablissements[0]);
+
         } catch (Exception $exception) {
             $this->logService->insererLog("La récupération des établissements a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new JsonResponse($this->serializer->serialize($etablissement, 'json', ['groups' => 'etablissement']), Response::HTTP_OK);
+        return new JsonResponse($this->serializer->serialize($listeEtablissements, 'json', ['groups' => 'etablissement']), Response::HTTP_OK);
     }
 }
