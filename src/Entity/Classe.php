@@ -29,7 +29,7 @@ class Classe
     #[Groups(["nelmio", "classe"])]
     private ?Cursus $cursus = null;
 
-    #[ORM\OneToMany(mappedBy: 'classe', targetEntity: Session::class)]
+    #[ORM\OneToMany(mappedBy: 'classe', targetEntity: Session::class, cascade: ['remove'])]
     #[Groups(["nelmio", "classe"])]
     /** @var ArrayCollection $sessions */
     private $sessions;
