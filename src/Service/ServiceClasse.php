@@ -9,7 +9,7 @@ class ServiceClasse
         if (
             null === $data
             || !isset($data['libelle'])
-            || (!isset($data['nombreEleves']) || !is_int($data['nombreEleves']))
+            || !isset($data['nombreEleves'])
             || !isset($data['cursusId'])
         ) {
             return false;
