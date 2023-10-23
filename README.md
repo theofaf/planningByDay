@@ -25,3 +25,12 @@ Si vous ne possèdez pas scoop, pas de panique et suivez ces étapes.
 - Ensuite, nous allons **installer le certifat TLS** pour le serveur symfony : **symfony.exe server:ca:install**
 - Enfin, pour **lancer votre serveur en local**, c'est tous simple : **symfony server:start**  (pour l'arrêt : symfony server:stop)
 - Et voilà, votre environnement de travail est **prêt** !
+
+### Les commandes de raccourcis
+Plusieurs commandes shell sont disponibles sur le projet, à partir d'un terminal bash :
+- **sh migrations.sh** : raccourci permettant d'exécuter les migrations dans la BDD
+- **sh fixtures.sh** : raccourci permettant d'exécuter les fixtures dans la BDD
+- **sh empty_cache.sh** : raccourci permettant de vider le cache de symfony  
+- **sh initProject.sh** : raccourci permettant de setup son environnement plus rapidement   
+Cette commande permet de mettre à jour les dépendances composer, de créer la BDD, mettre à jour le schéma de la BDD,  
+lancer les fixtures puis vider le cache symfony 
