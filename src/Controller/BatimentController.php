@@ -405,13 +405,12 @@ class BatimentController extends AbstractController
      */
     public function deleteBatiment(int $batimentId): JsonResponse
     {
-        $batiment = $this->em->getRepository(Batiment::class)->find($batimentId);
-
-        if (!$batiment) {
-            return new JsonResponse(['message' => 'Batiment non trouvé'], Response::HTTP_NOT_FOUND);
-        }
-
         try {
+            $batiment = $this->em->getRepository(Batiment::class)->find($batimentId);
+            if (!$batiment) {
+                return new JsonResponse(['message' => 'Batiment non trouvé'], Response::HTTP_NOT_FOUND);
+            }
+
             $this->em->remove($batiment);
             $this->em->flush();
         } catch (Exception $exception) {

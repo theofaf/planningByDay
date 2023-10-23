@@ -45,15 +45,15 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    #[ORM\OneToMany(mappedBy: 'receveur', targetEntity: Message::class)]
+    #[ORM\OneToMany(mappedBy: 'receveur', targetEntity: Message::class, cascade: ['remove'])]
     #[Groups(["nelmio", "utilisateur"])]
     private $messagesRecues;
 
-    #[ORM\OneToMany(mappedBy: 'emetteur', targetEntity: Message::class)]
+    #[ORM\OneToMany(mappedBy: 'emetteur', targetEntity: Message::class, cascade: ['remove'])]
     #[Groups(["nelmio", "utilisateur"])]
     private $messagesEnvoyees;
 
-    #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: Ticket::class)]
+    #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: Ticket::class, cascade: ['remove'])]
     #[Groups(["nelmio", "utilisateur"])]
     /** @var ArrayCollection $tickets */
     private $tickets;
@@ -63,7 +63,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(["nelmio", "utilisateur"])]
     private ?Etablissement $etablissement = null;
 
-    #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: Session::class)]
+    #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: Session::class, cascade: ['remove'])]
     #[Groups(["nelmio", "utilisateur"])]
     /** @var ArrayCollection $sessions */
     private $sessions;
@@ -76,7 +76,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(["nelmio", "utilisateur"])]
     private ?DateTimeInterface $dateDerniereAction = null;
 
-    #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: ModuleFormationUtilisateur::class)]
+    #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: ModuleFormationUtilisateur::class, cascade: ['remove'])]
     #[Groups(["nelmio", "utilisateur"])]
     /** @var ArrayCollection $listeModulesFormations */
     private $listeModulesFormations;

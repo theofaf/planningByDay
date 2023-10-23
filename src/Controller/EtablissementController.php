@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Utilisateur;
 use App\Service\EtablissementService;
 use App\Service\LogService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -196,11 +197,16 @@ class EtablissementController extends AbstractController
     {
         try {
             $etablissement = $this->em->getRepository(Etablissement::class)->find($etablissementId);
+            $etablissementSansAffection = $this->em->getRepository(Etablissement::class)->findOneBy(['libelle' => Etablissement::REFERENCE_SANS_AFFECTION]);
 
-            if (!$etablissement) {
+            if (!$etablissement || !$etablissementSansAffection || ($etablissementSansAffection->getId() === $etablissementId)) {
                 return new JsonResponse(['message' => 'Établissement non trouvé'], Response::HTTP_NOT_FOUND);
             }
 
+            $utilisateurs = $this->em->getRepository(Utilisateur::class)->findBy(['etablissement' => $etablissement->getId()]);
+            foreach ($utilisateurs as $utilisateur) {
+                $utilisateur->setEtablissement($etablissementSansAffection);
+            }
             $this->em->remove($etablissement);
             $this->em->flush();
         } catch (Exception $exception) {

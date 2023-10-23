@@ -31,7 +31,7 @@ class ModuleFormation
     /** @var ArrayCollection $listeCursus */
     private $listeCursus;
 
-    #[ORM\OneToMany(mappedBy: 'moduleFormation', targetEntity: ModuleFormationUtilisateur::class, cascade: ['persist'])]
+    #[ORM\OneToMany(mappedBy: 'moduleFormation', targetEntity: ModuleFormationUtilisateur::class, cascade: ['persist', 'remove'])]
     #[Groups(["nelmio"])]
     /** @var ArrayCollection $moduleFormationUtilisateurs */
     private $moduleFormationUtilisateurs;

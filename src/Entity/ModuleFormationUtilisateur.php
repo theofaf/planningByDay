@@ -12,7 +12,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 class ModuleFormationUtilisateur
 {
     #[ORM\Id]
-    #[ORM\ManyToOne(targetEntity: ModuleFormation::class, inversedBy: 'moduleFormationUtilisateurs')]
+    #[ORM\ManyToOne(targetEntity: ModuleFormation::class, cascade: ['remove'], inversedBy: 'moduleFormationUtilisateurs')]
     #[Groups(["nelmio", "ModuleFormationUtilisateur", "utilisateur"])]
     private ?ModuleFormation $moduleFormation = null;
 

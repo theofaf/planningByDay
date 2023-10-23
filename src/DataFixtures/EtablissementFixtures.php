@@ -34,6 +34,17 @@ class EtablissementFixtures extends Fixture
         $abonnements = $this->abonnementRepository->findAll();
         $etablissementsData = [
             [
+                'libelle' => Etablissement::REFERENCE_SANS_AFFECTION,
+                'numVoie' => 0,
+                'rue' => 'inconnu',
+                'ville' => 'inconnu',
+                'codePostal' => 00000,
+                'numeroTel' => '0000000000',
+                'statutAbonnement' => false,
+                'abonnement' => $abonnements[0],
+                'dateAbonnement' => null,
+            ],
+            [
                 'libelle' => self::REFERENCE_ECOLE_CAMUS,
                 'numVoie' => 123,
                 'rue' => 'Rue des lilas',

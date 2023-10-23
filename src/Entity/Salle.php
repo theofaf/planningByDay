@@ -33,7 +33,7 @@ class Salle
     #[Groups(["nelmio", "salle"])]
     private ?Batiment $batiment = null;
 
-    #[ORM\OneToMany(mappedBy: 'salle', targetEntity: Session::class)]
+    #[ORM\OneToMany(mappedBy: 'salle', targetEntity: Session::class, cascade: ['remove'])]
     #[Groups(["nelmio", "salle"])]
     /** @var ArrayCollection $sessions */
     private $sessions;

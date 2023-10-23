@@ -5,6 +5,7 @@ namespace App\Controller;
 
 use App\Entity\Cursus;
 use App\Entity\ModuleFormationUtilisateur;
+use App\Entity\Session;
 use App\Entity\Utilisateur;
 use App\Service\LogService;
 use DateTime;
@@ -185,13 +186,16 @@ class ModuleController extends AbstractController
      */
     public function deleteModule(int $moduleId): JsonResponse
     {
-        $module = $this->em->getRepository(ModuleFormation::class)->find($moduleId);
-
-        if (!$module) {
-            return new JsonResponse(['message' => 'Module non trouvé'], Response::HTTP_NOT_FOUND);
-        }
-
         try {
+            $module = $this->em->getRepository(ModuleFormation::class)->find($moduleId);
+            if (!$module) {
+                return new JsonResponse(['message' => 'Module non trouvé'], Response::HTTP_NOT_FOUND);
+            }
+
+            $sessions = $this->em->getRepository(Session::class)->findBy(['moduleFormation' => $module->getId()]);
+            foreach ($sessions as $session) {
+                $this->em->remove($session);
+            }
             $this->em->remove($module);
             $this->em->flush();
         } catch (Exception $exception) {

@@ -45,7 +45,7 @@ class Batiment
     #[Groups(["nelmio", "batiment"])]
     private ?Etablissement $etablissement = null;
 
-    #[ORM\OneToMany(mappedBy: 'batiment', targetEntity: Salle::class)]
+    #[ORM\OneToMany(mappedBy: 'batiment', targetEntity: Salle::class, cascade: ['remove'])]
     #[Groups(["nelmio", "batiment"])]
     /** @var ArrayCollection $salles */
     private $salles;

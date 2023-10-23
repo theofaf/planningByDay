@@ -12,6 +12,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ORM\Entity(repositoryClass: EtablissementRepository::class)]
 class Etablissement
 {
+    public const REFERENCE_SANS_AFFECTION = 'Sans Affection';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -54,12 +56,12 @@ class Etablissement
     #[Groups(["nelmio", "etablissement"])]
     private ?Abonnement $abonnement = null;
     
-    #[ORM\OneToMany(mappedBy: 'etablissement', targetEntity: Ticket::class)]
+    #[ORM\OneToMany(mappedBy: 'etablissement', targetEntity: Ticket::class, cascade: ['remove'])]
     #[Groups(["nelmio", "etablissement"])]
     /** @var ArrayCollection $tickets */
     private $tickets;
 
-    #[ORM\OneToMany(mappedBy: 'etablissement', targetEntity: Batiment::class)]
+    #[ORM\OneToMany(mappedBy: 'etablissement', targetEntity: Batiment::class, cascade: ['remove'])]
     #[Groups(["nelmio", "etablissement"])]
     /** @var ArrayCollection $batiments */
     private $batiments;
