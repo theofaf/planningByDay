@@ -59,14 +59,14 @@ class EtablissementController extends AbstractController
     public function postEtablissement(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-
+        
         if (!$this->etablissementService->isDataValide($data)) {
             return new JsonResponse(['message' => 'Les données sont invalides'], Response::HTTP_BAD_REQUEST);
         }
 
         $etablissement = (new Etablissement())
             ->setLibelle($data['libelle'])
-            ->setNumVoie($data['numVoie'])
+            ->setNumVoie((int)$data['numVoie'])
             ->setRue($data['rue'])
             ->setVille($data['ville'])
             ->setCodePostal($data['codePostal'])

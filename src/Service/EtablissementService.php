@@ -11,7 +11,7 @@ class EtablissementService
         if (
             null === $data
             || !isset($data['libelle'])
-            || (!isset($data['numVoie']) || !is_int($data['numVoie']))
+            || !isset($data['numVoie'])
             || !isset($data['rue'])
             || !isset($data['ville'])
             || !isset($data['codePostal'])
@@ -19,6 +19,6 @@ class EtablissementService
         ) {
             return false;
         }
-       return true;
+        return true;
     }
 }
