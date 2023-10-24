@@ -12,7 +12,7 @@ use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
 
 /**
  * @extends ServiceEntityRepository<Utilisateur>
-* @implements PasswordUpgraderInterface<Utilisateur>
+ * @implements PasswordUpgraderInterface<Utilisateur>
  *
  * @method Utilisateur|null find($id, $lockMode = null, $lockVersion = null)
  * @method Utilisateur|null findOneBy(array $criteria, array $orderBy = null)
@@ -45,9 +45,9 @@ class UtilisateurRepository extends ServiceEntityRepository implements PasswordU
      * @param Etablissement|int|null $etablissement Etablissement à partir duquel on souhaite récupérer des {@see Utilisateur}
      * @return array|null Retourne l'ensemble des utilisateurs d'un même {@see Etablissement}, excepté {@see Utilisateur} passé en paramètre
      */
-     public function recupererUtilisateursMemeEtablissement(
+    public function recupererUtilisateursMemeEtablissement(
         Etablissement|int|null $etablissement,
-    ) : ?array {
+    ): ?array {
         if ($etablissement instanceof Etablissement) {
             $etablissement = $etablissement->getId();
         }
@@ -55,9 +55,18 @@ class UtilisateurRepository extends ServiceEntityRepository implements PasswordU
         $qb = $this->createQueryBuilder('u');
         $qb
             ->join('u.etablissement', 'e')
-            ->andWhere($qb->expr()->eq('e.id', $etablissement))
-        ;
+            ->andWhere($qb->expr()->eq('e.id', $etablissement));
 
         return $qb->getQuery()->getResult();
+    }
+
+    public function findAllExceptSupportRole(): array
+    {
+        $qb = $this->createQueryBuilder('u')
+            ->where('u.roles NOT LIKE :role')
+            ->setParameter('role', '%ROLE_SUPPORT%')
+            ->getQuery();
+
+        return $qb->getResult();
     }
 }

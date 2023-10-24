@@ -57,7 +57,7 @@ class UtilisateurController extends AbstractController
     public function getUtilisateurs(): JsonResponse
     {
         try {
-            $utilisateurs = $this->em->getRepository(Utilisateur::class)->findAll();
+            $utilisateurs = $this->em->getRepository(Utilisateur::class)->findAllExceptSupportRole();
         } catch (Exception $exception) {
             $this->logService->insererLog("La récupération des utilisateurs a échoué", $exception);
             return new JsonResponse(['message' => 'Une erreur est survenue'], Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -217,8 +217,7 @@ class UtilisateurController extends AbstractController
                 ->setEmail($data['email'])
                 ->setRoles([$data['roles']])
                 ->setPassword($this->passwordHasher->hashPassword($utilisateur, 'Azerty123*'))
-                ->setDateDerniereAction(new DateTime())
-            ;
+                ->setDateDerniereAction(new DateTime());
 
             $etablissement = $this->em->getRepository(Etablissement::class)->find($data['etablissementId']);
             if (!$etablissement) {
@@ -299,8 +298,7 @@ class UtilisateurController extends AbstractController
             $isValid = $this->passwordHasher->isPasswordValid($utilisateur, $password);
 
             if (
-                null !== $password || null !== $passwordNew
-                || $isValid
+                isset($password) && isset($passwordNew) && $isValid
             ) {
                 $utilisateur->setPassword($this->passwordHasher->hashPassword($utilisateur, $passwordNew));
             }
@@ -309,8 +307,8 @@ class UtilisateurController extends AbstractController
                 ->setNom($data['nom'])
                 ->setPrenom($data['prenom'])
                 ->setEmail($data['email'])
-                ->setDateDerniereAction(new DateTime())
-            ;
+                ->setRoles([$data['roles']])
+                ->setDateDerniereAction(new DateTime());
 
             $this->em->flush();
         } catch (Exception $exception) {
