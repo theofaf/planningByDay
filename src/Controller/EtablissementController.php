@@ -294,7 +294,7 @@ class EtablissementController extends AbstractController
         try {
             $etablissements = $this->em->getRepository(Etablissement::class)->findAll();
             $listeEtablissements = new ArrayCollection($etablissements);
-            $listeEtablissements->removeElement($etablissements[0]);
+            // $listeEtablissements->removeElement($etablissements[0]);
 
         } catch (Exception $exception) {
             $this->logService->insererLog("La récupération des établissements a échoué", $exception);

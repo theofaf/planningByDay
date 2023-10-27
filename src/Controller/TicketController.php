@@ -249,8 +249,9 @@ class TicketController extends AbstractController
                 return new JsonResponse(['message' => 'Ticket non trouvé'], Response::HTTP_NOT_FOUND);
             }
 
+            var_dump($data['message']);
             if (isset($data['message'])) {
-                $ticket->setSujet($data['message']);
+                $ticket->setMessage($data['message']);
             }
 
             if (isset($data['sujet'])) {
