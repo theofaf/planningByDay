@@ -95,8 +95,8 @@ class UtilisateurFixtures extends Fixture implements DependentFixtureInterface
                     ->setUtilisateur($utilisateursMemeEtablissement[0])
                     ->setEtablissement($etablissement)
                     ->setStatut($this->faker->randomElement($statuts))
-                    ->setSujet($this->faker->words(5, true))
-                    ->setMessage($this->faker->realText(300))
+                    ->setSujet($this->faker->realtext(15))
+                    ->setMessage($this->faker->realText(200))
                     ->setDateEnvoi($this->faker->dateTimeBetween(startDate: '-1 year'))
                 ;
 
