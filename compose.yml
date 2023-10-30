@@ -15,9 +15,9 @@ services:
     networks:
       - back
 
-  projet-eni-back-dev:
+  projet-eni-back:
     build: ./
-    container_name: projet-eni-back-dev
+    container_name: projet-eni-back
     depends_on:
       mariadb:
         condition: service_healthy
