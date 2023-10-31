@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  mariadb:
+    image: mariadb:10.10.2
+    container_name: mariadb
+    ports:
+      - 3306:3306
+    environment:
+      - MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=true
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 2s
+      retries: 120
+    networks:
+      - back
+
+  projet-eni-back:
+    build: ./
+    container_name: projet-eni-back
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    ports:
+      - 8000:8000
+    networks:
+      - back
+      - front
+
+networks:
+  back:
+    name: back
+    driver: bridge
+  front:
+    name: front
+    driver: bridge

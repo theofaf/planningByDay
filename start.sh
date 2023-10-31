@@ -1,5 +1,5 @@
 #!/bin/bash
-
+echo "Configuration du projet"
 # Ce script automatise l'installation et la configuration d'un projet Symfony :
 # - Génère les dépendances composer pour le projet.
 # - Génère l'autoloader Composer et vide le cache Symfony.
@@ -56,3 +56,5 @@ secondes=$((duration%60))
 echo "Temps écoulé: ${heures}h ${minutes}m ${secondes}s"
 # Afficher un bandeau vert avec un message en blanc
 echo -e "\e[42m\e[97mCommande terminée avec succès.\e[0m"
+echo "Démarrage du projet"
+symfony server:start
